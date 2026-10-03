@@ -9,6 +9,7 @@ registration, and security guard registration, backed by MongoDB.
 Expected project layout (relative to this file):
 
     app.py
+    .env                     # your secrets (do NOT commit this)
     index.html
     css/
     images/
@@ -35,12 +36,13 @@ Expected project layout (relative to this file):
                 profile.html
 
 Run:
-    pip install flask pymongo werkzeug --break-system-packages
+    pip install flask pymongo werkzeug python-dotenv --break-system-packages
     # On Windows, also: pip install tzdata --break-system-packages
     # make sure a MongoDB instance is running, e.g. mongod --dbpath ./data
-    # First run only: set ADMIN_PASSWORD (and optionally ADMIN_USERNAME) so the
-    # first admin account can be created, e.g. (PowerShell):
-    #     $env:ADMIN_PASSWORD="your-strong-password"
+    # Create a .env file next to this file with at least:
+    #     MONGO_URI=...
+    #     ADMIN_PASSWORD=your-strong-password   (first run only, creates the first admin)
+    # Optional: FLASK_DEBUG=1 for local development (auto-reload + debugger).
     python app.py
 """
 
@@ -53,18 +55,24 @@ from zoneinfo import ZoneInfo
 
 from bson import ObjectId
 from bson.errors import InvalidId
+from dotenv import load_dotenv
 from flask import Flask, jsonify, redirect, request, send_from_directory
 from pymongo import MongoClient, ReturnDocument
 from pymongo.errors import PyMongoError
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 
+# Load variables from a .env file (if present) into os.environ. This must run
+# before any os.environ.get(...) call below.
+load_dotenv()
+
 # ── Configuration ────────────────────────────────────────────────────────────
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 UPLOAD_DIR = os.path.join(BASE_DIR, "uploads", "orcr")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-MONGO_URI = os.environ.get("MONGO_URI", "mongodb+srv://libradolyka27:BUbgywekj7sW6hyl@cluster0.lfduxoi.mongodb.net/")
+# Never hardcode real credentials here. Set MONGO_URI in your .env file.
+MONGO_URI = os.environ.get("MONGO_URI", "mongodb://localhost:27017/")
 DB_NAME = os.environ.get("MONGO_DB", "motorcycle_system")
 
 # Timezone used for "today" on the security dashboard. Set APP_TIMEZONE to change it.
@@ -126,8 +134,8 @@ def seed_default_admin():
     """Create the first admin account if none exist yet.
 
     Reads ADMIN_USERNAME (default "admin"), ADMIN_PASSWORD (required) and
-    ADMIN_EMAIL (optional) from the environment, so no password lives in the
-    source code. Does nothing once any admin exists.
+    ADMIN_EMAIL (optional) from the environment (or .env), so no password
+    lives in the source code. Does nothing once any admin exists.
     """
     if admins.count_documents({}) > 0:
         return
@@ -135,7 +143,8 @@ def seed_default_admin():
     password = os.environ.get("ADMIN_PASSWORD")
     if not password:
         print("[admin] No admin account exists. Set ADMIN_PASSWORD (and "
-              "optionally ADMIN_USERNAME) and restart to create the first admin.")
+              "optionally ADMIN_USERNAME) in your .env file and restart to "
+              "create the first admin.")
         return
     admins.insert_one({
         "username": username,
@@ -1389,4 +1398,7 @@ def file_too_large(_):
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    # Debug mode exposes an interactive debugger, so it's off unless you opt in.
+    # For local development, add FLASK_DEBUG=1 to your .env file.
+    debug_mode = os.environ.get("FLASK_DEBUG", "0").strip().lower() in ("1", "true", "yes")
+    app.run(debug=debug_mode, host="0.0.0.0", port=5000)
