@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>QR Code Management</title>
+  <link rel="stylesheet" href="../../vendors/mdi/css/materialdesignicons.min.css">
+  <link rel="stylesheet" href="../../vendors/base/vendor.bundle.base.css">
+  <link rel="stylesheet" href="../../css/style.css">
+  <link rel="shortcut icon" href="../../images/mini-logo.png" />
+  <!-- QR code generator library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    /* ── Toolbar ── */
+    .qr-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+    .search-box {
+      position: relative;
+      flex: 1;
+      min-width: 180px;
+      max-width: 320px;
+    }
+    .search-box i {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #aaa;
+      font-size: 16px;
+    }
+    .search-box input {
+      width: 100%;
+      padding: 8px 12px 8px 34px;
+      border: 1px solid #dee2e6;
+      border-radius: 6px;
+      font-size: 13px;
+      outline: none;
+      transition: border-color .2s;
+    }
+    .search-box input:focus { border-color: #4B49AC; }
+
+    /* ── Table ── */
+    .table thead th {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      color: #6c757d;
+      border-bottom: 2px solid #e9ecef;
+    }
+    .table tbody tr { cursor: pointer; }
+    .table tbody tr.selected-row { background: #ebebf8 !important; }
+    .table tbody tr.selected-row td { color: #2c2c54; }
+
+    .plate-tag {
+      display: inline-block;
+      background: #2c2c54;
+      color: #fff;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      padding: 3px 10px;
+      border-radius: 4px;
+    }
+
+    .badge-qr {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .badge-qr::before {
+      content: '';
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+      display: inline-block;
+    }
+    .badge-active    { background: #e8faf0; color: #27ae60; }
+    .badge-none      { background: #f5f5f5; color: #95a5a6; }
+    .badge-expired   { background: #fde8e8; color: #c0392b; }
+
+    .no-results {
+      text-align: center;
+      padding: 40px 0;
+      color: #aaa;
+      font-size: 14px;
+      display: none;
+    }
+    .no-results i { font-size: 36px; display: block; margin-bottom: 8px; }
+
+    /* ── Layout: table + panel side by side on large screens ── */
+    .qr-layout {
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+    }
+    .qr-table-wrap { flex: 1; min-width: 0; }
+    .qr-panel {
+      width: 260px;
+      flex-shrink: 0;
+      border: 1px solid #e9ecef;
+      border-radius: 10px;
+      padding: 22px 18px 18px;
+      background: #fafbff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+    }
+    @media (max-width: 900px) {
+      .qr-layout { flex-direction: column; }
+      .qr-panel { width: 100%; }
+    }
+
+    .qr-panel-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #2c2c54;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      margin-bottom: 14px;
+      align-self: flex-start;
+    }
+
+    .qr-info {
+      width: 100%;
+      margin-bottom: 16px;
+    }
+    .qr-info-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      padding: 5px 0;
+      border-bottom: 1px solid #eee;
+    }
+    .qr-info-row:last-child { border-bottom: none; }
+    .qr-info-label { color: #aaa; font-weight: 600; text-transform: uppercase; letter-spacing: .03em; }
+    .qr-info-value { color: #2c2c54; font-weight: 700; }
+
+    /* QR display box */
+    .qr-display {
+      width: 180px;
+      height: 180px;
+      border: 2px dashed #dee2e6;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+      background: #fff;
+      overflow: hidden;
+      position: relative;
+    }
+    .qr-display.has-qr { border: 2px solid #4B49AC; }
+    .qr-display canvas,
+    .qr-display img { display: block; }
+    .qr-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      color: #ccc;
+    }
+    .qr-placeholder i { font-size: 40px; }
+    .qr-placeholder span { font-size: 12px; }
+
+    /* Buttons */
+    .qr-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      width: 100%;
+    }
+    .btn-qr {
+      width: 100%;
+      padding: 9px 0;
+      border-radius: 7px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      transition: opacity .15s, background .15s;
+    }
+    .btn-qr:disabled { opacity: .4; cursor: not-allowed; }
+    .btn-download { background: #27ae60; color: #fff; }
+    .btn-download:hover:not(:disabled) { background: #1e8449; }
+    .btn-print    { background: #fff; color: #4B49AC; border: 1.5px solid #4B49AC !important; }
+    .btn-print:hover:not(:disabled) { background: #ebebf8; }
+
+    /* ── Toast ── */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 2000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .toast {
+      background: #2c2c54;
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      box-shadow: 0 6px 20px rgba(0,0,0,.2);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      animation: fadeInUp .3s ease;
+    }
+    .toast.success { background: #27ae60; }
+    .toast.info    { background: #4B49AC; }
+    .toast.error   { background: #c0392b; }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Loading / empty states ── */
+    .table-loading {
+      text-align: center;
+      padding: 40px 0;
+      color: #aaa;
+      font-size: 14px;
+    }
+    .table-loading i { font-size: 28px; display: block; margin-bottom: 8px; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Print styles ── */
+    @media print {
+      body * { visibility: hidden; }
+      #printArea, #printArea * { visibility: visible; }
+      #printArea {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: #fff;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Hidden print area -->
+  <div id="printArea" style="display:none; text-align:center; font-family:sans-serif; padding:40px;">
+    <h2 id="printTitle" style="font-size:18px; color:#2c2c54; margin-bottom:4px;"></h2>
+    <p id="printPlate" style="font-size:13px; color:#666; margin-bottom:20px;"></p>
+    <div id="printQrHolder" style="display:inline-block; padding:12px; border:2px solid #2c2c54; border-radius:8px;"></div>
+    <p style="font-size:11px; color:#aaa; margin-top:16px;">Campus Motorcycle Pass — Scan to verify</p>
+  </div>
+
+  <div class="container-scroller">
+    <!-- NAVBAR -->
+    <nav class="navbar col-lg-12 col-12 p-0 fixed-top d-flex flex-row">
+      <div class="navbar-brand-wrapper d-flex justify-content-center">
+        <div class="navbar-brand-inner-wrapper d-flex justify-content-between align-items-center w-100">
+          <a class="navbar-brand brand-logo" href="../../index.html"><img src="../../images/logo.png" alt="logo"/></a>
+          <a class="navbar-brand brand-logo-mini" href="../../index.html"><img src="../../images/mini-logo.jpg" alt="logo"/></a>
+          <button class="navbar-toggler navbar-toggler align-self-center" type="button" data-toggle="minimize">
+            <span class="mdi mdi-sort-variant"></span>
+          </button>
+        </div>
+      </div>
+      <div class="navbar-menu-wrapper d-flex align-items-center justify-content-end">
+        <ul class="navbar-nav mr-lg-4 w-100">
+          <li class="nav-item nav-search d-none d-lg-block w-100">
+            <div class="input-group">
+              <div class="input-group-prepend">
+                <span class="input-group-text"><i class="mdi mdi-magnify"></i></span>
+              </div>
+              <input type="text" class="form-control" placeholder="Search now">
+            </div>
+          </li>
+        </ul>
+        <ul class="navbar-nav navbar-nav-right">
+          <li class="nav-item nav-profile dropdown">
+            <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown" id="profileDropdown">
+              <img src="../../images/faces/default-profile.jpg" alt="profile"/>
+            </a>
+            <div class="dropdown-menu dropdown-menu-right navbar-dropdown" aria-labelledby="profileDropdown">
+              <a class="dropdown-item"><i class="mdi mdi-settings text-primary"></i> Settings</a>
+              <a class="dropdown-item"><i class="mdi mdi-logout text-primary"></i> Logout</a>
+            </div>
+          </li>
+        </ul>
+        <button class="navbar-toggler navbar-toggler-right d-lg-none align-self-center" type="button" data-toggle="offcanvas">
+          <span class="mdi mdi-menu"></span>
+        </button>
+      </div>
+    </nav>
+
+    <div class="container-fluid page-body-wrapper">
+      <!-- SIDEBAR -->
+      <nav class="sidebar sidebar-offcanvas" id="sidebar">
+        <ul class="nav">
+          <li class="nav-item">
+            <a class="nav-link" href="../../index.html">
+              <i class="mdi mdi-home menu-icon"></i><span class="menu-title">Dashboard</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="../../pages/user-management/users.html">
+              <i class="mdi mdi-account-multiple menu-icon"></i><span class="menu-title">User Management</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="../../pages/motorcycle-management/motorcycle.html">
+              <i class="mdi mdi-motorbike menu-icon"></i><span class="menu-title">Motorcycle Management</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="../../pages/qrcode-management/qrcode.html">
+              <i class="mdi mdi-qrcode menu-icon"></i><span class="menu-title">QR Code Management</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="../../pages/logs/logs.html">
+              <i class="mdi mdi-history menu-icon"></i><span class="menu-title">Entry and Exit Records</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="../../pages/reports/reports.html">
+              <i class="mdi mdi-chart-line menu-icon"></i><span class="menu-title">Reports</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+
+      <!-- MAIN -->
+      <div class="main-panel">
+        <div class="content-wrapper">
+          <div class="row">
+            <div class="col-lg-12 grid-margin stretch-card">
+              <div class="card">
+                <div class="card-body">
+                  <h4 class="card-title mb-1">QR Code Management</h4>
+                  <p class="card-description mb-3">Generate, download, and print QR passes for registered motorcycles.</p>
+
+                  <!-- Toolbar -->
+                  <div class="qr-toolbar">
+                    <div class="search-box">
+                      <i class="mdi mdi-magnify"></i>
+                      <input type="text" id="searchInput" placeholder="Search owner or plate number…" oninput="renderTable()">
+                    </div>
+                  </div>
+
+                  <!-- Table + Panel -->
+                  <div class="qr-layout">
+
+                    <!-- Table -->
+                    <div class="qr-table-wrap">
+                      <div class="table-responsive">
+                        <table class="table table-hover" id="qrTable">
+                          <thead>
+                            <tr>
+                              <th>#</th>
+                              <th>Owner</th>
+                              <th>Plate Number</th>
+                              <th>Brand / Model</th>
+                              <th>QR Status</th>
+                            </tr>
+                          </thead>
+                          <tbody id="qrTableBody"></tbody>
+                        </table>
+                        <div class="table-loading" id="tableLoading">
+                          <i class="mdi mdi-loading"></i>
+                          Loading motorcycle records…
+                        </div>
+                        <div class="no-results" id="noResults">
+                          <i class="mdi mdi-qrcode-scan"></i>
+                          No records match your search.
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- QR Panel -->
+                    <div class="qr-panel">
+                      <div class="qr-panel-title">Selected Record</div>
+
+                      <div class="qr-info" id="qrInfo">
+                        <div class="qr-info-row">
+                          <span class="qr-info-label">Owner</span>
+                          <span class="qr-info-value" id="piOwner">—</span>
+                        </div>
+                        <div class="qr-info-row">
+                          <span class="qr-info-label">Plate</span>
+                          <span class="qr-info-value" id="piPlate">—</span>
+                        </div>
+                        <div class="qr-info-row">
+                          <span class="qr-info-label">Brand</span>
+                          <span class="qr-info-value" id="piBrand">—</span>
+                        </div>
+                        <div class="qr-info-row">
+                          <span class="qr-info-label">Model</span>
+                          <span class="qr-info-value" id="piModel">—</span>
+                        </div>
+                      </div>
+
+                      <!-- QR image box -->
+                      <div class="qr-display" id="qrDisplay">
+                        <div class="qr-placeholder" id="qrPlaceholder">
+                          <i class="mdi mdi-qrcode"></i>
+                          <span>Select a record</span>
+                        </div>
+                        <div id="qrCanvas" style="display:none"></div>
+                      </div>
+
+                      <!-- Action buttons -->
+                      <div class="qr-actions">
+                        <button class="btn-qr btn-download" id="btnDownload" onclick="downloadQR()" disabled>
+                          <i class="mdi mdi-download"></i> Download
+                        </button>
+                        <button class="btn-qr btn-print" id="btnPrint" onclick="printQR()" disabled>
+                          <i class="mdi mdi-printer"></i> Print
+                        </button>
+                      </div>
+                    </div>
+
+                  </div><!-- /qr-layout -->
+
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <footer class="footer">
+          <div class="d-sm-flex justify-content-center justify-content-sm-between">
+            <span class="text-muted text-center text-sm-left d-block d-sm-inline-block">Copyright © 2026 Malapag National High School. All rights reserved.</span>
+          </div>
+        </footer>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="../../vendors/base/vendor.bundle.base.js"></script>
+  <script src="../../js/off-canvas.js"></script>
+  <script src="../../js/hoverable-collapse.js"></script>
+  <script src="../../js/template.js"></script>
+
+  <script>
+    // ── Config ───────────────────────────────────────────────────────────────
+    // Relative path, so this works whether the app is served from '/' or
+    // behind a different host/port than 5000 — change if your API lives
+    // on a different origin than the page itself.
+    const API_BASE = '/api/motorcycles';
+
+    // ── State ────────────────────────────────────────────────────────────────
+    let records     = [];   // populated from the database
+    let selectedId  = null;
+    let qrGenerated = false;
+    let qrInstance  = null;
+
+    // ── Load records from the database ──────────────────────────────────────
+    async function loadRecords() {
+      const loading = document.getElementById('tableLoading');
+      const noRes   = document.getElementById('noResults');
+      loading.style.display = 'block';
+      noRes.style.display   = 'none';
+
+      try {
+        const res = await fetch(API_BASE);
+        if (!res.ok) throw new Error(`Request failed (${res.status})`);
+        const data = await res.json();
+
+        records = data.map(d => ({
+          id:       d.id,
+          owner:    d.owner || 'Unknown',
+          plate:    d.plate || '—',
+          brand:    d.brand || '',
+          model:    d.model || '',
+          qrStatus: d.qr_status || 'None'
+        }));
+
+        loading.style.display = 'none';
+        renderTable();
+      } catch (err) {
+        console.error('Failed to load motorcycles:', err);
+        loading.style.display = 'none';
+        showToast('Could not load motorcycle records from the server.', 'error');
+      }
+    }
+
+    // ── Render table ──────────────────────────────────────────────────────────
+    function renderTable() {
+      const q     = document.getElementById('searchInput').value.trim().toLowerCase();
+      const tbody = document.getElementById('qrTableBody');
+      const noRes = document.getElementById('noResults');
+
+      const filtered = records.filter(r =>
+        !q ||
+        r.owner.toLowerCase().includes(q) ||
+        r.plate.toLowerCase().includes(q) ||
+        r.brand.toLowerCase().includes(q)
+      );
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = '';
+        noRes.style.display = records.length === 0 ? 'none' : 'block';
+        return;
+      }
+      noRes.style.display = 'none';
+
+      const cls = { Active: 'badge-active', None: 'badge-none', Expired: 'badge-expired' };
+
+      tbody.innerHTML = filtered.map((r, i) => `
+        <tr onclick="selectRecord('${r.id}')" id="row-${r.id}" ${r.id === selectedId ? 'class="selected-row"' : ''}>
+          <td>${i + 1}</td>
+          <td style="font-weight:600;color:#2c2c54">${r.owner}</td>
+          <td><span class="plate-tag">${r.plate}</span></td>
+          <td>${r.brand} ${r.model}</td>
+          <td><span class="badge-qr ${cls[r.qrStatus] || 'badge-none'}">${r.qrStatus}</span></td>
+        </tr>
+      `).join('');
+    }
+
+function selectRecord(id) {
+  selectedId   = id;
+  qrGenerated  = false;
+
+  const r = records.find(x => x.id === id);
+  if (!r) return;
+
+  // Highlight row
+  document.querySelectorAll('#qrTableBody tr').forEach(tr => tr.classList.remove('selected-row'));
+  const row = document.getElementById(`row-${id}`);
+  if (row) row.classList.add('selected-row');
+
+  // Fill panel info
+  document.getElementById('piOwner').textContent = r.owner;
+  document.getElementById('piPlate').textContent = r.plate;
+  document.getElementById('piBrand').textContent = r.brand;
+  document.getElementById('piModel').textContent = r.model;
+
+  // Reset QR display
+  clearQRDisplay();
+
+  // Enable Download + Print buttons
+  document.getElementById('btnDownload').disabled = true;
+  document.getElementById('btnPrint').disabled    = true;
+
+  // Automatically generate QR code (no manual "Generate" step)
+  generateQR();
+}
+    // ── Clear QR display ───────────────────────────────────────────────────────
+    function clearQRDisplay() {
+      const display     = document.getElementById('qrDisplay');
+      const canvas      = document.getElementById('qrCanvas');
+      const placeholder = document.getElementById('qrPlaceholder');
+
+      canvas.innerHTML      = '';
+      canvas.style.display  = 'none';
+      placeholder.style.display = 'flex';
+      display.classList.remove('has-qr');
+      qrInstance = null;
+    }
+
+    // ── Generate QR ────────────────────────────────────────────────────────────
+    async function generateQR() {
+      if (!selectedId) return;
+      const r = records.find(x => x.id === selectedId);
+      if (!r) return;
+
+      const canvas      = document.getElementById('qrCanvas');
+      const placeholder = document.getElementById('qrPlaceholder');
+      const display      = document.getElementById('qrDisplay');
+
+      canvas.innerHTML = '';
+
+      const qrData = JSON.stringify({
+        motorcycle_id: r.id,
+        owner:  r.owner,
+        plate:  r.plate,
+        brand:  r.brand,
+        model:  r.model,
+        issued: new Date().toISOString().split('T')[0]
+      });
+
+      qrInstance = new QRCode(canvas, {
+        text:          qrData,
+        width:         156,
+        height:        156,
+        colorDark:     '#2c2c54',
+        colorLight:    '#ffffff',
+        correctLevel:  QRCode.CorrectLevel.H
+      });
+
+      canvas.style.display      = 'flex';
+      canvas.style.alignItems   = 'center';
+      canvas.style.justifyContent = 'center';
+      placeholder.style.display = 'none';
+      display.classList.add('has-qr');
+
+      qrGenerated = true;
+
+      // Persist the QR status on the motorcycle record in the database.
+      try {
+        const res = await fetch(`${API_BASE}/${r.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ qr_status: 'Active' })
+        });
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          throw new Error(body.error || `Request failed (${res.status})`);
+        }
+
+        r.qrStatus = 'Active';
+        renderTable();
+
+        document.getElementById('btnDownload').disabled = false;
+        document.getElementById('btnPrint').disabled    = false;
+        showToast('QR code generated and saved.', 'success');
+      } catch (err) {
+        console.error('Failed to save QR status:', err);
+        // The QR code still renders locally, but it wasn't saved — let the
+        // user know so the table doesn't silently drift from the database.
+        document.getElementById('btnDownload').disabled = false;
+        document.getElementById('btnPrint').disabled    = false;
+        showToast('QR code generated, but saving the status failed.', 'error');
+      }
+    }
+
+    // ── Get QR canvas element ─────────────────────────────────────────────────
+    function getQRCanvasEl() {
+      return document.querySelector('#qrCanvas canvas') || document.querySelector('#qrCanvas img');
+    }
+
+    // ── Download QR ────────────────────────────────────────────────────────────
+    function downloadQR() {
+      if (!qrGenerated) return;
+      const r  = records.find(x => x.id === selectedId);
+      const el = getQRCanvasEl();
+      if (!r || !el) return;
+
+      let dataUrl;
+      if (el.tagName === 'CANVAS') {
+        dataUrl = el.toDataURL('image/png');
+      } else {
+        dataUrl = el.src;
+      }
+
+      const a = document.createElement('a');
+      a.href     = dataUrl;
+      a.download = `QR_${r.plate.replace(/\s/g,'_')}_${r.owner.replace(/\s/g,'_')}.png`;
+      a.click();
+      showToast('QR code downloaded.', 'success');
+    }
+
+    // ── Print QR ───────────────────────────────────────────────────────────────
+    function printQR() {
+      if (!qrGenerated) return;
+      const r  = records.find(x => x.id === selectedId);
+      const el = getQRCanvasEl();
+      if (!r || !el) return;
+
+      let dataUrl;
+      if (el.tagName === 'CANVAS') {
+        dataUrl = el.toDataURL('image/png');
+      } else {
+        dataUrl = el.src;
+      }
+
+      document.getElementById('printTitle').textContent = r.owner;
+      document.getElementById('printPlate').textContent = `Plate: ${r.plate}  ·  ${r.brand} ${r.model}`;
+
+      const holder = document.getElementById('printQrHolder');
+      holder.innerHTML = `<img src="${dataUrl}" width="200" height="200" style="display:block;">`;
+
+      document.getElementById('printArea').style.display = 'block';
+      window.print();
+      document.getElementById('printArea').style.display = 'none';
+    }
+
+    // ── Toast ─────────────────────────────────────────────────────────────────
+    function showToast(msg, type = 'success') {
+      const tc   = document.getElementById('toastContainer');
+      const icon = type === 'success' ? 'mdi-check-circle' : (type === 'error' ? 'mdi-alert-circle' : 'mdi-information');
+      const el   = document.createElement('div');
+      el.className = `toast ${type}`;
+      el.innerHTML = `<i class="mdi ${icon}"></i> ${msg}`;
+      tc.appendChild(el);
+      setTimeout(() => el.remove(), 3000);
+    }
+
+    // ── Init ──────────────────────────────────────────────────────────────────
+    loadRecords();
+  </script>
+</body>
+</html>

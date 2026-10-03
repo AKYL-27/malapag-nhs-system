@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Entry & Exit History — Moto Monitor</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css"/>
+<link rel="stylesheet" href="styles.css"/>
+  <link rel="shortcut icon" href="../../images/mini-logo.png" />
+
+</head>
+<body>
+<h1 class="sr-only">My Entry and Exit History for campus motorcycle activity</h1>
+
+<div class="overlay" id="overlay" onclick="closeMobileSidebar()"></div>
+<aside class="sidebar" id="sidebar"></aside>
+
+<main class="main" id="main">
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="mobile-menu-btn" onclick="openMobileSidebar()" aria-label="Open menu">
+        <i class="ti ti-menu-2" aria-hidden="true"></i>
+      </button>
+      <div class="topbar-titles">
+        <div class="page-title">Entry & Exit History</div>
+        <div class="breadcrumb" id="topbarDate"></div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="notif-btn" aria-label="Notifications">
+        <i class="ti ti-bell" style="font-size:18px;" aria-hidden="true"></i>
+        <span class="notif-dot"></span>
+      </div>
+      <div class="user-chip">
+        <div class="user-avatar" id="userAvatar">—</div>
+        <span class="user-name" id="userName">Loading…</span>
+        <i class="ti ti-chevron-down" style="font-size:13px;color:var(--text-hint);" aria-hidden="true"></i>
+      </div>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <div class="filter-row">
+      <input type="text" placeholder="Search by plate or status..." id="historySearch"/>
+      <input type="date" id="historyDate"/>
+      <select id="historyRangeSelect">
+        <option value="">All Records</option>
+        <option value="week">This Week</option>
+        <option value="month">This Month</option>
+      </select>
+    </div>
+
+    <div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Date</th><th>Time In</th><th>Time Out</th><th>Motorcycle Plate</th><th>Status</th></tr></thead>
+          <tbody id="historyTbody">
+            <tr><td colspan="5" class="text-center">Loading history…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="pagination">
+      <span id="historySummary"></span>
+      <div class="pg-btns" id="historyPgBtns"></div>
+    </div>
+
+  </div>
+</main>
+
+<script src="sidebar.js"></script>
+<script src="app.js"></script>
+<script>renderSidebar('history');</script>
+<script>
+  (function () {
+    const PAGE_SIZE = 7;
+    const state = { q: '', date: '', range: '', page: 1 };
+    let ownerId = null;
+
+    // login.html saves the logged-in user as JSON under 'motoUser', in
+    // sessionStorage by default or localStorage when "Remember me" was
+    // checked — so it can be in either one depending on how this person
+    // signed in.
+    function getCurrentUser() {
+      const raw = sessionStorage.getItem('motoUser') || localStorage.getItem('motoUser');
+      if (!raw) return null;
+      try {
+        return JSON.parse(raw);
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function updateUserChip(user) {
+      const nameEl = document.getElementById('userName');
+      const avatarEl = document.getElementById('userAvatar');
+      if (!user) {
+        nameEl.textContent = 'Not signed in';
+        avatarEl.textContent = '?';
+        return;
+      }
+      const fullName = user.fullName || 'Unknown User';
+      nameEl.textContent = fullName;
+      avatarEl.textContent = fullName
+        .split(/\s+/)
+        .filter(Boolean)
+        .slice(0, 2)
+        .map(w => w[0].toUpperCase())
+        .join('') || '?';
+    }
+
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, c => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[c]));
+    }
+
+    function badgeForStatus(status) {
+      const isCompleted = status === 'Completed';
+      const cls = isCompleted ? 'badge-completed' : 'badge-progress';
+      return `<span class="badge ${cls}">${escapeHtml(status)}</span>`;
+    }
+
+    function renderRows(records) {
+      const tbody = document.getElementById('historyTbody');
+      if (!records || records.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center">No matching records.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = records.map(r => `
+        <tr>
+          <td>${escapeHtml(r.date)}</td>
+          <td>${escapeHtml(r.time_in)}</td>
+          <td>${escapeHtml(r.time_out)}</td>
+          <td><span class="plate">${escapeHtml(r.plate)}</span></td>
+          <td>${badgeForStatus(r.status)}</td>
+        </tr>
+      `).join('');
+    }
+
+    function renderPagination(total, page, pageSize) {
+      const summary = document.getElementById('historySummary');
+      const container = document.getElementById('historyPgBtns');
+      const totalPages = Math.max(1, Math.ceil(total / pageSize));
+
+      if (total === 0) {
+        summary.textContent = 'No records found';
+      } else {
+        const shown = Math.min(pageSize, total - (page - 1) * pageSize);
+        summary.textContent = `Showing ${shown} of ${total} records`;
+      }
+
+      // Windowed page numbers (up to 5), so this stays readable even with
+      // a large history.
+      let start = Math.max(1, page - 2);
+      let end = Math.min(totalPages, start + 4);
+      start = Math.max(1, end - 4);
+
+      let html = `<button class="pg-btn" id="pgPrev" ${page <= 1 ? 'disabled' : ''}>&larr; Prev</button>`;
+      for (let p = start; p <= end; p++) {
+        html += `<button class="pg-btn${p === page ? ' active' : ''}" data-page="${p}">${p}</button>`;
+      }
+      html += `<button class="pg-btn" id="pgNext" ${page >= totalPages ? 'disabled' : ''}>Next &rarr;</button>`;
+      container.innerHTML = html;
+
+      const prevBtn = document.getElementById('pgPrev');
+      const nextBtn = document.getElementById('pgNext');
+      if (prevBtn) prevBtn.addEventListener('click', () => {
+        if (state.page > 1) { state.page--; loadHistory(); }
+      });
+      if (nextBtn) nextBtn.addEventListener('click', () => {
+        if (state.page < totalPages) { state.page++; loadHistory(); }
+      });
+      container.querySelectorAll('[data-page]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.page = parseInt(btn.dataset.page, 10);
+          loadHistory();
+        });
+      });
+    }
+
+    async function loadHistory() {
+      if (!ownerId) {
+        document.getElementById('historyTbody').innerHTML =
+          '<tr><td colspan="5" class="text-center">Please log in to view your entry &amp; exit history.</td></tr>';
+        document.getElementById('historySummary').textContent = '';
+        document.getElementById('historyPgBtns').innerHTML = '';
+        return;
+      }
+
+      const params = new URLSearchParams({
+        owner_id: ownerId,
+        page: state.page,
+        page_size: PAGE_SIZE,
+      });
+      if (state.q) params.set('q', state.q);
+      // A specific date takes priority over the week/month dropdown, same
+      // as the backend's own precedence for these two filters.
+      if (state.date) {
+        params.set('date', state.date);
+      } else if (state.range) {
+        params.set('range', state.range);
+      }
+
+      try {
+        const res = await fetch(`/api/entry-exit-records?${params.toString()}`);
+        if (!res.ok) throw new Error(`Request failed (${res.status})`);
+        const data = await res.json();
+        renderRows(data.records);
+        renderPagination(data.total, data.page, data.page_size);
+      } catch (err) {
+        console.error('Failed to load /api/entry-exit-records:', err);
+        document.getElementById('historyTbody').innerHTML =
+          '<tr><td colspan="5" class="text-center">Could not load history. Please try again.</td></tr>';
+        document.getElementById('historySummary').textContent = '';
+        document.getElementById('historyPgBtns').innerHTML = '';
+      }
+    }
+
+    function setTopbarDate() {
+      const el = document.getElementById('topbarDate');
+      if (!el) return;
+      el.textContent = new Date().toLocaleDateString(undefined, {
+        weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
+      });
+    }
+
+    let searchDebounce;
+    document.getElementById('historySearch').addEventListener('input', (e) => {
+      clearTimeout(searchDebounce);
+      searchDebounce = setTimeout(() => {
+        state.q = e.target.value.trim();
+        state.page = 1;
+        loadHistory();
+      }, 300);
+    });
+
+    document.getElementById('historyDate').addEventListener('change', (e) => {
+      state.date = e.target.value;
+      state.page = 1;
+      loadHistory();
+    });
+
+    document.getElementById('historyRangeSelect').addEventListener('change', (e) => {
+      state.range = e.target.value;
+      state.page = 1;
+      loadHistory();
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const user = getCurrentUser();
+      ownerId = user && user.id;
+      updateUserChip(user);
+      setTopbarDate();
+      loadHistory();
+    });
+  })();
+</script>
+</body>
+</html>

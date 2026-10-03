@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Entry &amp; Exit Logs</title>
+  <link rel="stylesheet" href="../../vendors/mdi/css/materialdesignicons.min.css">
+  <link rel="stylesheet" href="../../vendors/base/vendor.bundle.base.css">
+  <link rel="stylesheet" href="../../css/style.css">
+  <link rel="shortcut icon" href="../../images/mini-logo.png" />
+  <style>
+    /* ── Toolbar ── */
+    .logs-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .toolbar-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .toolbar-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: #6c757d;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      white-space: nowrap;
+    }
+
+    .date-input {
+      padding: 8px 12px;
+      border: 1px solid #dee2e6;
+      border-radius: 6px;
+      font-size: 13px;
+      outline: none;
+      transition: border-color .2s;
+      color: #2c2c54;
+      background: #fff;
+    }
+    .date-input:focus { border-color: #4B49AC; }
+
+    .search-box {
+      position: relative;
+      min-width: 180px;
+      max-width: 260px;
+    }
+    .search-box i {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #aaa;
+      font-size: 16px;
+    }
+    .search-box input {
+      width: 100%;
+      padding: 8px 12px 8px 34px;
+      border: 1px solid #dee2e6;
+      border-radius: 6px;
+      font-size: 13px;
+      outline: none;
+      transition: border-color .2s;
+    }
+    .search-box input:focus { border-color: #4B49AC; }
+
+    .filter-tabs {
+      display: flex;
+      gap: 4px;
+    }
+    .filter-btn {
+      padding: 7px 16px;
+      border: 1px solid #dee2e6;
+      border-radius: 6px;
+      background: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      color: #6c757d;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .filter-btn.active,
+    .filter-btn:hover {
+      background: #4B49AC;
+      color: #fff;
+      border-color: #4B49AC;
+    }
+    .filter-btn.entry-active { background: #27ae60; border-color: #27ae60; color: #fff; }
+    .filter-btn.exit-active  { background: #e74c3c; border-color: #e74c3c; color: #fff; }
+
+    .btn-export {
+      margin-left: auto;
+      background: #fff;
+      color: #4B49AC;
+      border: 1.5px solid #4B49AC;
+      border-radius: 6px;
+      padding: 7px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .btn-export:hover { background: #ebebf8; }
+    .btn-export:disabled { opacity: .5; cursor: not-allowed; }
+
+    .btn-refresh {
+      background: #fff;
+      color: #6c757d;
+      border: 1.5px solid #dee2e6;
+      border-radius: 6px;
+      padding: 7px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .btn-refresh:hover { background: #f5f5f5; }
+    .btn-refresh:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-refresh i.spin { animation: spin 1s linear infinite; }
+
+    /* ── Summary cards ── */
+    .summary-row {
+      display: flex;
+      gap: 14px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .summary-card {
+      flex: 1;
+      min-width: 120px;
+      border-radius: 10px;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .summary-card.total   { background: #ebebf8; }
+    .summary-card.entries { background: #e8faf0; }
+    .summary-card.exits   { background: #fde8e8; }
+
+    .summary-icon {
+      width: 38px; height: 38px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .summary-card.total   .summary-icon { background: #4B49AC; color: #fff; }
+    .summary-card.entries .summary-icon { background: #27ae60; color: #fff; }
+    .summary-card.exits   .summary-icon { background: #e74c3c; color: #fff; }
+
+    .summary-text .s-count {
+      font-size: 22px;
+      font-weight: 800;
+      line-height: 1;
+      color: #2c2c54;
+    }
+    .summary-text .s-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #6c757d;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    /* ── Table ── */
+    .table thead th {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      color: #6c757d;
+      border-bottom: 2px solid #e9ecef;
+    }
+
+    .plate-tag {
+      display: inline-block;
+      background: #2c2c54;
+      color: #fff;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      padding: 3px 10px;
+      border-radius: 4px;
+    }
+
+    .badge-log {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    .badge-entry { background: #e8faf0; color: #27ae60; }
+    .badge-exit  { background: #fde8e8; color: #e74c3c; }
+
+    .time-cell {
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      font-weight: 700;
+      color: #2c2c54;
+    }
+    .date-cell {
+      font-size: 12px;
+      color: #aaa;
+    }
+
+    .action-btn {
+      background: none;
+      border: none;
+      padding: 5px 7px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      line-height: 1;
+      transition: background .15s;
+      color: #4B49AC;
+    }
+    .action-btn:hover { background: #f0f0f0; }
+
+    .no-results {
+      text-align: center;
+      padding: 40px 0;
+      color: #aaa;
+      font-size: 14px;
+      display: none;
+    }
+    .no-results i { font-size: 36px; display: block; margin-bottom: 8px; }
+
+    .table-loading {
+      text-align: center;
+      padding: 40px 0;
+      color: #aaa;
+      font-size: 14px;
+    }
+    .table-loading i { font-size: 28px; display: block; margin-bottom: 8px; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.45);
+      z-index: 1050;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+      background: #fff;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 460px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.18);
+      overflow: hidden;
+      animation: slideUp .25s ease;
+    }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid #e9ecef;
+    }
+    .modal-header h5 { margin: 0; font-size: 16px; font-weight: 700; color: #2c2c54; }
+    .modal-close {
+      background: none; border: none;
+      font-size: 20px; color: #aaa; cursor: pointer; line-height: 1; padding: 0 4px;
+    }
+    .modal-close:hover { color: #333; }
+    .modal-body { padding: 22px 24px; }
+    .modal-footer {
+      display: flex; justify-content: flex-end; gap: 10px;
+      padding: 14px 24px 20px;
+    }
+    .btn-close-modal {
+      padding: 9px 20px; border: 1px solid #dee2e6;
+      border-radius: 7px; background: #fff; font-size: 13px;
+      font-weight: 600; color: #6c757d; cursor: pointer;
+    }
+    .btn-close-modal:hover { background: #f5f5f5; }
+
+    .view-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 24px; }
+    .view-field { margin-bottom: 16px; }
+    .vf-label {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .05em; color: #aaa; margin-bottom: 3px;
+    }
+    .vf-value { font-size: 14px; color: #2c2c54; font-weight: 500; }
+
+    /* entry/exit accent strip on modal */
+    .modal-accent {
+      height: 4px;
+      width: 100%;
+    }
+    .accent-entry { background: #27ae60; }
+    .accent-exit  { background: #e74c3c; }
+
+    /* ── Toast ── */
+    .toast-container {
+      position: fixed; bottom: 24px; right: 24px;
+      z-index: 2000; display: flex; flex-direction: column; gap: 8px;
+    }
+    .toast {
+      background: #27ae60; color: #fff;
+      padding: 12px 20px; border-radius: 8px;
+      font-size: 13px; font-weight: 500;
+      box-shadow: 0 6px 20px rgba(0,0,0,.2);
+      display: flex; align-items: center; gap: 8px;
+      animation: fadeInUp .3s ease;
+    }
+    .toast.info  { background: #4B49AC; }
+    .toast.error { background: #c0392b; }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container-scroller">
+    <!-- NAVBAR -->
+    <nav class="navbar col-lg-12 col-12 p-0 fixed-top d-flex flex-row">
+      <div class="navbar-brand-wrapper d-flex justify-content-center">
+        <div class="navbar-brand-inner-wrapper d-flex justify-content-between align-items-center w-100">
+          <a class="navbar-brand brand-logo" href="../../index.html"><img src="../../images/logo.png" alt="logo"/></a>
+          <a class="navbar-brand brand-logo-mini" href="../../index.html"><img src="../../images/mini-logo.jpg" alt="logo"/></a>
+          <button class="navbar-toggler navbar-toggler align-self-center" type="button" data-toggle="minimize">
+            <span class="mdi mdi-sort-variant"></span>
+          </button>
+        </div>
+      </div>
+      <div class="navbar-menu-wrapper d-flex align-items-center justify-content-end">
+        <ul class="navbar-nav mr-lg-4 w-100">
+          <li class="nav-item nav-search d-none d-lg-block w-100">
+            <div class="input-group">
+              <div class="input-group-prepend">
+                <span class="input-group-text"><i class="mdi mdi-magnify"></i></span>
+              </div>
+              <input type="text" class="form-control" placeholder="Search now">
+            </div>
+          </li>
+        </ul>
+        <ul class="navbar-nav navbar-nav-right">
+          <li class="nav-item nav-profile dropdown">
+            <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown" id="profileDropdown">
+              <img src="../../images/faces/default-profile.jpg" alt="profile"/>
+            </a>
+            <div class="dropdown-menu dropdown-menu-right navbar-dropdown" aria-labelledby="profileDropdown">
+              <a class="dropdown-item"><i class="mdi mdi-settings text-primary"></i> Settings</a>
+              <a class="dropdown-item"><i class="mdi mdi-logout text-primary"></i> Logout</a>
+            </div>
+          </li>
+        </ul>
+        <button class="navbar-toggler navbar-toggler-right d-lg-none align-self-center" type="button" data-toggle="offcanvas">
+          <span class="mdi mdi-menu"></span>
+        </button>
+      </div>
+    </nav>
+
+    <div class="container-fluid page-body-wrapper">
+      <!-- SIDEBAR -->
+      <nav class="sidebar sidebar-offcanvas" id="sidebar">
+        <ul class="nav">
+          <li class="nav-item">
+            <a class="nav-link" href="../../index.html">
+              <i class="mdi mdi-home menu-icon"></i><span class="menu-title">Dashboard</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="../../pages/user-management/users.html">
+              <i class="mdi mdi-account-multiple menu-icon"></i><span class="menu-title">User Management</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="../../pages/motorcycle-management/motorcycle.html">
+              <i class="mdi mdi-motorbike menu-icon"></i><span class="menu-title">Motorcycle Management</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="../../pages/qrcode-management/qrcode.html">
+              <i class="mdi mdi-qrcode menu-icon"></i><span class="menu-title">QR Code Management</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="../../pages/logs/logs.html">
+              <i class="mdi mdi-history menu-icon"></i><span class="menu-title">Entry and Exit Records</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="../../pages/reports/reports.html">
+              <i class="mdi mdi-chart-line menu-icon"></i><span class="menu-title">Reports</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+
+      <!-- MAIN -->
+      <div class="main-panel">
+        <div class="content-wrapper">
+          <div class="row">
+            <div class="col-lg-12 grid-margin stretch-card">
+              <div class="card">
+                <div class="card-body">
+                  <h4 class="card-title mb-1">Entry &amp; Exit Records</h4>
+                  <p class="card-description mb-3">Track all motorcycle entries and exits through the campus gate.</p>
+
+                  <!-- Summary Cards -->
+                  <div class="summary-row" id="summaryRow">
+                    <div class="summary-card total">
+                      <div class="summary-icon"><i class="mdi mdi-clipboard-list"></i></div>
+                      <div class="summary-text">
+                        <div class="s-count" id="sumTotal">0</div>
+                        <div class="s-label">Total Logs</div>
+                      </div>
+                    </div>
+                    <div class="summary-card entries">
+                      <div class="summary-icon"><i class="mdi mdi-arrow-right-circle"></i></div>
+                      <div class="summary-text">
+                        <div class="s-count" id="sumEntries">0</div>
+                        <div class="s-label">Entries</div>
+                      </div>
+                    </div>
+                    <div class="summary-card exits">
+                      <div class="summary-icon"><i class="mdi mdi-arrow-left-circle"></i></div>
+                      <div class="summary-text">
+                        <div class="s-count" id="sumExits">0</div>
+                        <div class="s-label">Exits</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Toolbar -->
+                  <div class="logs-toolbar">
+                    <div class="toolbar-group">
+                      <span class="toolbar-label">Date</span>
+                      <input type="date" id="dateFilter" class="date-input" onchange="renderTable()">
+                    </div>
+                    <div class="filter-tabs">
+                      <button class="filter-btn active" data-f="all"    onclick="setFilter('all',this)">All</button>
+                      <button class="filter-btn"        data-f="Entry"  onclick="setFilter('Entry',this)">Entries</button>
+                      <button class="filter-btn"        data-f="Exit"   onclick="setFilter('Exit',this)">Exits</button>
+                    </div>
+                    <div class="search-box">
+                      <i class="mdi mdi-magnify"></i>
+                      <input type="text" id="searchInput" placeholder="Search name or plate…" oninput="renderTable()">
+                    </div>
+                    <button class="btn-refresh" id="btnRefresh" onclick="loadLogs()">
+                      <i class="mdi mdi-refresh" id="refreshIcon"></i> Refresh
+                    </button>
+                    <button class="btn-export" id="btnExport" onclick="exportCSV()">
+                      <i class="mdi mdi-file-export"></i> Export CSV
+                    </button>
+                  </div>
+
+                  <!-- Table -->
+                  <div class="table-responsive">
+                    <table class="table table-hover">
+                      <thead>
+                        <tr>
+                          <th>#</th>
+                          <th>Owner</th>
+                          <th>Plate Number</th>
+                          <th>Brand / Model</th>
+                          <th>Date</th>
+                          <th>Time</th>
+                          <th>Type</th>
+                          <th>Details</th>
+                        </tr>
+                      </thead>
+                      <tbody id="logsTableBody"></tbody>
+                    </table>
+                    <div class="table-loading" id="tableLoading">
+                      <i class="mdi mdi-loading"></i>
+                      Loading entry &amp; exit records…
+                    </div>
+                    <div class="no-results" id="noResults">
+                      <i class="mdi mdi-history"></i>
+                      No logs match your filters.
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <footer class="footer">
+          <div class="d-sm-flex justify-content-center justify-content-sm-between">
+            <span class="text-muted text-center text-sm-left d-block d-sm-inline-block">Copyright © 2026 Malapag National High School. All rights reserved.</span>
+            <!--<span class="float-none float-sm-right d-block mt-1 mt-sm-0 text-center">Hand-crafted & made with <i class="mdi mdi-heart text-danger"></i></span>-->
+          </div>
+        </footer>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       VIEW LOG MODAL
+  ══════════════════════════════════════ -->
+  <div class="modal-overlay" id="viewModal">
+    <div class="modal-box">
+      <div class="modal-accent" id="modalAccent"></div>
+      <div class="modal-header">
+        <h5 id="modalTypeTitle">Log Details</h5>
+        <button class="modal-close" onclick="closeModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="view-grid">
+          <div class="view-field">
+            <div class="vf-label">Owner</div>
+            <div class="vf-value" id="vOwner">—</div>
+          </div>
+          <div class="view-field">
+            <div class="vf-label">Plate Number</div>
+            <div class="vf-value" id="vPlate">—</div>
+          </div>
+          <div class="view-field">
+            <div class="vf-label">Brand</div>
+            <div class="vf-value" id="vBrand">—</div>
+          </div>
+          <div class="view-field">
+            <div class="vf-label">Model</div>
+            <div class="vf-value" id="vModel">—</div>
+          </div>
+          <div class="view-field">
+            <div class="vf-label">Date</div>
+            <div class="vf-value" id="vDate">—</div>
+          </div>
+          <div class="view-field">
+            <div class="vf-label">Time</div>
+            <div class="vf-value" id="vTime">—</div>
+          </div>
+          <div class="view-field" style="grid-column:1/-1">
+            <div class="vf-label">Type</div>
+            <div class="vf-value" id="vType">—</div>
+          </div>
+          <div class="view-field" style="grid-column:1/-1">
+            <div class="vf-label">Scanned By (Guard)</div>
+            <div class="vf-value" id="vGuard">—</div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-close-modal" onclick="closeModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="../../vendors/base/vendor.bundle.base.js"></script>
+  <script src="../../js/off-canvas.js"></script>
+  <script src="../../js/hoverable-collapse.js"></script>
+  <script src="../../js/template.js"></script>
+
+  <script>
+    // ── Config ───────────────────────────────────────────────────────────────
+    const RECORDS_API = '/api/entry-exit-records';
+    const MOTOS_API    = '/api/motorcycles';
+    const USERS_API    = '/api/admin/users';
+    const PAGE_SIZE     = 100;
+
+    // ── State ────────────────────────────────────────────────────────────────
+    let logs          = [];   // flattened Entry/Exit events, built from the DB
+    let activeFilter   = 'all';
+    let isLoading      = false;
+
+    // ── Format helpers ────────────────────────────────────────────────────────
+    function fmtDate(isoDateKey) {
+      // isoDateKey is 'YYYY-MM-DD'
+      const [y, mo, dy] = isoDateKey.split('-');
+      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      return `${months[parseInt(mo, 10) - 1]} ${parseInt(dy, 10)}, ${y}`;
+    }
+
+    // Treat a timestamp with no explicit UTC offset as UTC, so sorting is
+    // consistent regardless of the browser's local timezone.
+    function toSortableTs(isoStr) {
+      if (!isoStr) return 0;
+      const hasOffset = /Z$|[+-]\d{2}:\d{2}$/.test(isoStr);
+      return new Date(hasOffset ? isoStr : isoStr + 'Z').getTime();
+    }
+
+    // ── Fetch every page of entry/exit records ──────────────────────────────
+    async function fetchAllRecords() {
+      let page = 1;
+      let all = [];
+      while (true) {
+        const res = await fetch(`${RECORDS_API}?page=${page}&page_size=${PAGE_SIZE}`);
+        if (!res.ok) throw new Error(`Failed to load records (${res.status})`);
+        const data = await res.json();
+        all = all.concat(data.records || []);
+        if (all.length >= data.total || (data.records || []).length < PAGE_SIZE) break;
+        page += 1;
+      }
+      return all;
+    }
+
+    // plate -> { brand, model, owner }
+    async function fetchMotorcycleMap() {
+      const res = await fetch(MOTOS_API);
+      if (!res.ok) throw new Error(`Failed to load motorcycles (${res.status})`);
+      const data = await res.json();
+      const map = {};
+      data.forEach(m => {
+        map[m.plate] = { brand: m.brand || '', model: m.model || '', owner: m.owner || '' };
+      });
+      return map;
+    }
+
+    // account id -> full name (covers students/staff and security guards)
+    async function fetchNameMap() {
+      const res = await fetch(USERS_API);
+      if (!res.ok) throw new Error(`Failed to load accounts (${res.status})`);
+      const data = await res.json();
+      const map = {};
+      data.forEach(u => { map[u.id] = u.fullName || 'Unknown'; });
+      return map;
+    }
+
+    // ── Turn DB records (one per visit) into display events (one per gate scan) ─
+    function buildEvents(records, motoMap, nameMap) {
+      const events = [];
+
+      records.forEach(r => {
+        const moto = motoMap[r.plate] || {};
+        const ownerName = (r.owner_id && nameMap[r.owner_id]) || moto.owner || 'Unknown';
+        const brand = moto.brand || '—';
+        const model = moto.model || '';
+
+        if (r.entry_time) {
+          const dateKey = r.entry_time.slice(0, 10);
+          events.push({
+            id: `${r.id}-entry`,
+            owner: ownerName,
+            plate: r.plate,
+            brand, model,
+            dateKey,
+            dateDisplay: fmtDate(dateKey),
+            time: r.time_in,
+            type: 'Entry',
+            guard: (r.guard_id && nameMap[r.guard_id]) || 'Unknown',
+            sortTs: toSortableTs(r.entry_time)
+          });
+        }
+
+        if (r.exit_time) {
+          const dateKey = r.exit_time.slice(0, 10);
+          events.push({
+            id: `${r.id}-exit`,
+            owner: ownerName,
+            plate: r.plate,
+            brand, model,
+            dateKey,
+            dateDisplay: fmtDate(dateKey),
+            time: r.time_out,
+            type: 'Exit',
+            guard: (r.exit_guard_id && nameMap[r.exit_guard_id]) || 'Unknown',
+            sortTs: toSortableTs(r.exit_time)
+          });
+        }
+      });
+
+      events.sort((a, b) => b.sortTs - a.sortTs);
+      return events;
+    }
+
+    // ── Load everything from the database ───────────────────────────────────
+    async function loadLogs() {
+      if (isLoading) return;
+      isLoading = true;
+
+      const loading   = document.getElementById('tableLoading');
+      const noRes     = document.getElementById('noResults');
+      const refresh   = document.getElementById('btnRefresh');
+      const refIcon   = document.getElementById('refreshIcon');
+      const exportBtn = document.getElementById('btnExport');
+
+      loading.style.display = 'block';
+      noRes.style.display   = 'none';
+      refresh.disabled      = true;
+      exportBtn.disabled    = true;
+      refIcon.classList.add('spin');
+      document.getElementById('logsTableBody').innerHTML = '';
+
+      try {
+        const [records, motoMap, nameMap] = await Promise.all([
+          fetchAllRecords(),
+          fetchMotorcycleMap(),
+          fetchNameMap()
+        ]);
+
+        logs = buildEvents(records, motoMap, nameMap);
+        loading.style.display = 'none';
+        exportBtn.disabled = false;
+        renderTable();
+      } catch (err) {
+        console.error('Failed to load entry/exit records:', err);
+        loading.style.display = 'none';
+        showToast('Could not load entry & exit records from the server.', 'error');
+      } finally {
+        refresh.disabled = false;
+        refIcon.classList.remove('spin');
+        isLoading = false;
+      }
+    }
+
+    // ── Render ─────────────────────────────────────────────────────────────────
+    function renderTable() {
+      const dateVal = document.getElementById('dateFilter').value;
+      const q       = document.getElementById('searchInput').value.trim().toLowerCase();
+      const tbody   = document.getElementById('logsTableBody');
+      const noRes   = document.getElementById('noResults');
+
+      const filtered = logs.filter(l => {
+        const matchDate   = !dateVal || l.dateKey === dateVal;
+        const matchFilter = activeFilter === 'all' || l.type === activeFilter;
+        const matchSearch = !q || l.owner.toLowerCase().includes(q) || l.plate.toLowerCase().includes(q);
+        return matchDate && matchFilter && matchSearch;
+      });
+
+      // Update summary counts (use date+filter but not search for counts)
+      const forCount = logs.filter(l => !dateVal || l.dateKey === dateVal);
+      document.getElementById('sumTotal').textContent   = forCount.length;
+      document.getElementById('sumEntries').textContent = forCount.filter(l => l.type === 'Entry').length;
+      document.getElementById('sumExits').textContent   = forCount.filter(l => l.type === 'Exit').length;
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = '';
+        noRes.style.display = 'block';
+        return;
+      }
+      noRes.style.display = 'none';
+
+      tbody.innerHTML = filtered.map((l, i) => `
+        <tr>
+          <td>${i + 1}</td>
+          <td style="font-weight:600;color:#2c2c54">${l.owner}</td>
+          <td><span class="plate-tag">${l.plate}</span></td>
+          <td style="color:#555">${l.brand} ${l.model}</td>
+          <td class="date-cell">${l.dateDisplay}</td>
+          <td class="time-cell">${l.time}</td>
+          <td>
+            <span class="badge-log ${l.type === 'Entry' ? 'badge-entry' : 'badge-exit'}">
+              <i class="mdi ${l.type === 'Entry' ? 'mdi-arrow-right' : 'mdi-arrow-left'}"></i>
+              ${l.type}
+            </span>
+          </td>
+          <td>
+            <button class="action-btn" title="View details" onclick="viewLog('${l.id}')">
+              <i class="mdi mdi-eye"></i>
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // ── Filter ─────────────────────────────────────────────────────────────────
+    function setFilter(val, btn) {
+      activeFilter = val;
+      document.querySelectorAll('.filter-btn').forEach(b => {
+        b.classList.remove('active','entry-active','exit-active');
+      });
+      if (val === 'Entry') btn.classList.add('entry-active');
+      else if (val === 'Exit') btn.classList.add('exit-active');
+      else btn.classList.add('active');
+      renderTable();
+    }
+
+    // ── View log ───────────────────────────────────────────────────────────────
+    function viewLog(id) {
+      const l = logs.find(x => x.id === id);
+      if (!l) return;
+      document.getElementById('vOwner').textContent = l.owner;
+      document.getElementById('vPlate').textContent = l.plate;
+      document.getElementById('vBrand').textContent = l.brand;
+      document.getElementById('vModel').textContent = l.model;
+      document.getElementById('vDate').textContent  = l.dateDisplay;
+      document.getElementById('vTime').textContent  = l.time;
+      document.getElementById('vType').innerHTML    = `<span class="badge-log ${l.type==='Entry'?'badge-entry':'badge-exit'}">${l.type}</span>`;
+      document.getElementById('vGuard').textContent = l.guard;
+      document.getElementById('modalTypeTitle').textContent = `${l.type} Log — ${l.dateDisplay}`;
+      document.getElementById('modalAccent').className = `modal-accent ${l.type==='Entry'?'accent-entry':'accent-exit'}`;
+      document.getElementById('viewModal').classList.add('open');
+    }
+    function closeModal() {
+      document.getElementById('viewModal').classList.remove('open');
+    }
+    document.getElementById('viewModal').addEventListener('click', e => {
+      if (e.target === document.getElementById('viewModal')) closeModal();
+    });
+
+    // ── Export CSV ─────────────────────────────────────────────────────────────
+    function exportCSV() {
+      const dateVal = document.getElementById('dateFilter').value;
+      const q       = document.getElementById('searchInput').value.trim().toLowerCase();
+
+      const filtered = logs.filter(l => {
+        const matchDate   = !dateVal || l.dateKey === dateVal;
+        const matchFilter = activeFilter === 'all' || l.type === activeFilter;
+        const matchSearch = !q || l.owner.toLowerCase().includes(q) || l.plate.toLowerCase().includes(q);
+        return matchDate && matchFilter && matchSearch;
+      });
+
+      if (filtered.length === 0) {
+        showToast('Nothing to export for the current filters.', 'info');
+        return;
+      }
+
+      const header = ['#','Owner','Plate Number','Brand','Model','Date','Time','Type','Scanned By'];
+      const rows   = filtered.map((l, i) => [
+        i+1, l.owner, l.plate, l.brand, l.model, l.dateDisplay, l.time, l.type, l.guard
+      ]);
+
+      const csv = [header, ...rows].map(r => r.map(v => `"${v}"`).join(',')).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href     = url;
+      a.download = `entry_exit_logs${dateVal ? '_' + dateVal : ''}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('CSV exported successfully.', 'success');
+    }
+
+    // ── Toast ─────────────────────────────────────────────────────────────────
+    function showToast(msg, type = 'success') {
+      const tc   = document.getElementById('toastContainer');
+      const icon = type === 'success' ? 'mdi-check-circle' : (type === 'error' ? 'mdi-alert-circle' : 'mdi-information');
+      const el   = document.createElement('div');
+      el.className = `toast ${type}`;
+      el.innerHTML = `<i class="mdi ${icon}"></i> ${msg}`;
+      tc.appendChild(el);
+      setTimeout(() => el.remove(), 3000);
+    }
+
+    // ── Init ──────────────────────────────────────────────────────────────────
+    loadLogs();
+  </script>
+</body>
+</html>

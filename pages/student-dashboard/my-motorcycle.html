@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>My Motorcycle — Moto Monitor</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css"/>
+<link rel="stylesheet" href="styles.css"/>
+  <link rel="shortcut icon" href="../../images/mini-logo.png" />
+
+</head>
+<body>
+<h1 class="sr-only">My Motorcycle information page</h1>
+
+<div class="overlay" id="overlay" onclick="closeMobileSidebar()"></div>
+<aside class="sidebar" id="sidebar"></aside>
+
+<main class="main" id="main">
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="mobile-menu-btn" onclick="openMobileSidebar()" aria-label="Open menu">
+        <i class="ti ti-menu-2" aria-hidden="true"></i>
+      </button>
+      <div class="topbar-titles">
+        <div class="page-title">My Motorcycle</div>
+        <div class="breadcrumb" id="topbarDate"></div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="notif-btn" aria-label="Notifications">
+        <i class="ti ti-bell" style="font-size:18px;" aria-hidden="true"></i>
+        <span class="notif-dot"></span>
+      </div>
+      <button class="notif-btn" id="logoutBtn" aria-label="Sign out" onclick="logout()" style="border:none;cursor:pointer;background:transparent;">
+        <i class="ti ti-logout" style="font-size:18px;" aria-hidden="true"></i>
+      </button>
+      <div class="user-chip">
+        <div class="user-avatar" id="userAvatar">--</div>
+        <span class="user-name" id="userNameChip">Loading...</span>
+        <i class="ti ti-chevron-down" style="font-size:13px;color:var(--text-hint);" aria-hidden="true"></i>
+      </div>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- ============= HAS-MOTORCYCLE VIEW ============= -->
+    <div id="motoView">
+
+      <div class="moto-hero">
+        <div class="moto-hero-icon"><i class="ti ti-motorbike" aria-hidden="true"></i></div>
+        <div>
+          <div class="moto-hero-title" id="heroTitle">Loading...</div>
+          <div class="moto-hero-sub" id="heroSub">—</div>
+        </div>
+        <span class="status-pill" id="heroStatusPill" style="margin-left:auto;"><i class="ti ti-circle-check" style="font-size:12px;" aria-hidden="true"></i> —</span>
+      </div>
+
+      <div class="card" style="margin-bottom:20px;">
+        <div class="card-header-flex">
+          <div class="card-title"><i class="ti ti-file-text" aria-hidden="true"></i> Motorcycle Information</div>
+        </div>
+
+        <!-- Read-only view -->
+        <div class="detail-grid" id="detailGridView">
+          <div class="detail-item">
+            <div class="detail-label">Owner Name</div>
+            <div class="detail-value" id="viewOwner">—</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Plate Number</div>
+            <div class="detail-value"><span class="plate" id="viewPlate">—</span></div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Motorcycle Brand</div>
+            <div class="detail-value" id="viewBrand">—</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Model</div>
+            <div class="detail-value" id="viewModel">—</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Color</div>
+            <div class="detail-value" id="viewColor">—</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Registration Status</div>
+            <div class="detail-value"><span class="status-pill" id="viewStatusPill">—</span></div>
+          </div>
+        </div>
+
+        <!-- Edit form (hidden until Edit is clicked) -->
+        <div class="detail-grid" id="detailGridEdit" style="display:none;">
+          <div class="detail-item">
+            <div class="detail-label">Owner Name</div>
+            <div class="detail-value" id="editOwnerDisplay">—</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Plate Number</div>
+            <input type="text" id="editPlate" class="form-input" style="text-transform:uppercase;"/>
+            <div class="form-error" id="err-editPlate"><i class="ti ti-alert-circle" aria-hidden="true"></i> Please enter a valid plate number.</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Motorcycle Brand</div>
+            <select id="editBrand" class="form-select">
+              <option value="">Select...</option>
+              <option>Honda</option>
+              <option>Yamaha</option>
+              <option>Suzuki</option>
+              <option>Kawasaki</option>
+              <option>Kymco</option>
+              <option>Other</option>
+            </select>
+            <div class="form-error" id="err-editBrand"><i class="ti ti-alert-circle" aria-hidden="true"></i> Please select a brand.</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Model</div>
+            <input type="text" id="editModel" class="form-input"/>
+            <div class="form-error" id="err-editModel"><i class="ti ti-alert-circle" aria-hidden="true"></i> Please enter the model.</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Color</div>
+            <input type="text" id="editColor" class="form-input"/>
+            <div class="form-error" id="err-editColor"><i class="ti ti-alert-circle" aria-hidden="true"></i> Please enter the color.</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Registration Status</div>
+            <div class="detail-value" style="color:var(--text-hint);">Set by the security office</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="btn-row" id="viewButtons">
+        <button class="btn btn-primary" id="editBtn" onclick="enterEditMode()"><i class="ti ti-edit" aria-hidden="true"></i> Edit Information</button>
+      </div>
+      <div class="btn-row" id="editButtons" style="display:none;">
+        <button class="btn btn-primary" id="saveBtn" onclick="saveEdit()"><i class="ti ti-device-floppy" aria-hidden="true"></i> Save Changes</button>
+        <button class="btn btn-secondary" onclick="cancelEdit()"><i class="ti ti-x" aria-hidden="true"></i> Cancel</button>
+      </div>
+    </div>
+
+    <!-- ============= NO-MOTORCYCLE EMPTY STATE ============= -->
+    <div id="motoEmptyState" style="display:none;">
+      <div class="card" style="text-align:center;padding:48px 24px;">
+        <div class="moto-hero-icon" style="margin:0 auto 16px;"><i class="ti ti-motorbike" aria-hidden="true"></i></div>
+        <h2 style="margin:0 0 8px;">No motorcycle on file</h2>
+        <p style="color:var(--text-hint);margin:0 0 20px;">Add your motorcycle's details to get access approved for the campus gates.</p>
+        <button class="btn btn-primary" onclick="enterAddMode()"><i class="ti ti-plus" aria-hidden="true"></i> Add Motorcycle</button>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<div class="scan-toast" id="scanToast" style="position:fixed;bottom:24px;right:24px;z-index:999;background:var(--text);color:#fff;padding:12px 16px;border-radius:10px;font-size:13px;display:flex;align-items:center;gap:10px;box-shadow:0 4px 20px rgba(0,0,0,0.2);transform:translateY(80px);opacity:0;transition:all .3s;max-width:300px;">
+  <i class="ti ti-alert-circle" style="font-size:18px;color:#fca5a5;" aria-hidden="true"></i>
+  <span id="toastMsg">Notice</span>
+</div>
+<style>.scan-toast.show{transform:translateY(0)!important;opacity:1!important;}</style>
+
+<script src="sidebar.js"></script>
+<script src="app.js"></script>
+<script>renderSidebar('motorcycle');</script>
+
+<script>
+let currentUser = null;
+let currentMoto = null;
+
+function getInitials(name){
+  if(!name) return '--';
+  const parts=name.trim().split(/\s+/);
+  const first=parts[0]?.[0]||'';
+  const last=parts.length>1?parts[parts.length-1][0]:'';
+  return (first+last).toUpperCase() || '--';
+}
+
+function logout(){
+  sessionStorage.removeItem('motoUser');
+  localStorage.removeItem('motoUser');
+  window.location.href='/login';
+}
+
+function showToast(msg){
+  const t=document.getElementById('scanToast');
+  document.getElementById('toastMsg').textContent=msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+function setError(fieldId,isError){
+  const el=document.getElementById(fieldId);
+  if(!el) return;
+  const err=document.getElementById('err-'+fieldId);
+  if(err) err.classList.toggle('show',isError);
+}
+
+function statusPillClass(status){
+  if(status==='Registered') return 'status-active';
+  if(status==='Flagged') return 'status-flagged';
+  return 'status-pending';
+}
+
+function renderView(){
+  if(!currentMoto){
+    document.getElementById('motoView').style.display='none';
+    document.getElementById('motoEmptyState').style.display='block';
+    return;
+  }
+
+  document.getElementById('motoView').style.display='block';
+  document.getElementById('motoEmptyState').style.display='none';
+
+  const m=currentMoto;
+  document.getElementById('heroTitle').textContent = `${m.brand||''} ${m.model||''}`.trim() || 'Motorcycle';
+  document.getElementById('heroSub').textContent = `Registered motorcycle on file · Plate ${m.plate||'—'}`;
+
+  const status = m.status || 'Pending';
+  const pillClass = statusPillClass(status);
+  document.getElementById('heroStatusPill').className = 'status-pill '+pillClass;
+  document.getElementById('heroStatusPill').innerHTML = `<i class="ti ti-circle-check" style="font-size:12px;" aria-hidden="true"></i> ${status==='Registered'?'Registration Active':status}`;
+
+  document.getElementById('viewOwner').textContent = m.owner || currentUser.fullName || '—';
+  document.getElementById('viewPlate').textContent = m.plate || '—';
+  document.getElementById('viewBrand').textContent = m.brand || '—';
+  document.getElementById('viewModel').textContent = m.model || '—';
+  document.getElementById('viewColor').textContent = m.color || '—';
+  document.getElementById('viewStatusPill').className = 'status-pill '+pillClass;
+  document.getElementById('viewStatusPill').textContent = status;
+}
+
+function enterEditMode(){
+  const m=currentMoto;
+  document.getElementById('editOwnerDisplay').textContent = m.owner || currentUser.fullName || '—';
+  document.getElementById('editPlate').value = m.plate || '';
+  document.getElementById('editBrand').value = m.brand || '';
+  document.getElementById('editModel').value = m.model || '';
+  document.getElementById('editColor').value = m.color || '';
+
+  document.getElementById('detailGridView').style.display='none';
+  document.getElementById('detailGridEdit').style.display='grid';
+  document.getElementById('viewButtons').style.display='none';
+  document.getElementById('editButtons').style.display='flex';
+}
+
+function enterAddMode(){
+  currentMoto = { owner: currentUser.fullName, plate:'', brand:'', model:'', color:'', status:'Pending' };
+  document.getElementById('motoView').style.display='block';
+  document.getElementById('motoEmptyState').style.display='none';
+  document.getElementById('heroTitle').textContent='New Motorcycle';
+  document.getElementById('heroSub').textContent='Fill in the details below';
+  document.getElementById('heroStatusPill').className='status-pill status-pending';
+  document.getElementById('heroStatusPill').innerHTML='<i class="ti ti-circle-check" style="font-size:12px;" aria-hidden="true"></i> Not yet saved';
+  enterEditMode();
+}
+
+function cancelEdit(){
+  document.getElementById('detailGridView').style.display='grid';
+  document.getElementById('detailGridEdit').style.display='none';
+  document.getElementById('viewButtons').style.display='flex';
+  document.getElementById('editButtons').style.display='none';
+
+  // Reload from the server to discard any unsaved add-mode state.
+  loadMotorcycle();
+}
+
+async function saveEdit(){
+  const plate=document.getElementById('editPlate').value.trim();
+  const brand=document.getElementById('editBrand').value;
+  const model=document.getElementById('editModel').value.trim();
+  const color=document.getElementById('editColor').value.trim();
+
+  let valid=true;
+  setError('editPlate', plate.length<4); if(plate.length<4) valid=false;
+  setError('editBrand', brand===''); if(brand==='') valid=false;
+  setError('editModel', model.length<2); if(model.length<2) valid=false;
+  setError('editColor', color.length<2); if(color.length<2) valid=false;
+
+  if(!valid){
+    showToast('Please fill in all required fields.');
+    return;
+  }
+
+  const saveBtn=document.getElementById('saveBtn');
+  const originalHTML=saveBtn.innerHTML;
+  saveBtn.disabled=true;
+  saveBtn.innerHTML='<i class="ti ti-loader-2" aria-hidden="true"></i> Saving...';
+
+  const payload = { owner: currentUser.fullName, plate, brand, model, color };
+  const isNew = !currentMoto.id;
+
+  try {
+    const res = await fetch(
+      isNew ? '/api/motorcycles' : `/api/motorcycles/${currentMoto.id}`,
+      {
+        method: isNew ? 'POST' : 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(isNew ? { ...payload, owner_id: currentUser.id } : payload),
+      }
+    );
+    const result = await res.json();
+
+    if(!res.ok){
+      showToast(result.error || 'Could not save changes.');
+      saveBtn.disabled=false;
+      saveBtn.innerHTML=originalHTML;
+      return;
+    }
+
+    currentMoto = result;
+    document.getElementById('detailGridView').style.display='grid';
+    document.getElementById('detailGridEdit').style.display='none';
+    document.getElementById('viewButtons').style.display='flex';
+    document.getElementById('editButtons').style.display='none';
+    renderView();
+    showToast(isNew ? 'Motorcycle added successfully.' : 'Changes saved.');
+  } catch (err) {
+    showToast('Could not reach the server. Please check your connection.');
+  } finally {
+    saveBtn.disabled=false;
+    saveBtn.innerHTML=originalHTML;
+  }
+}
+
+async function loadMotorcycle(){
+  try {
+    const res = await fetch(`/api/motorcycles?owner_id=${encodeURIComponent(currentUser.id)}`);
+    const motorcycles = await res.json();
+    currentMoto = Array.isArray(motorcycles) && motorcycles.length>0 ? motorcycles[0] : null;
+  } catch (err) {
+    currentMoto = null;
+  }
+  renderView();
+}
+
+function initUser(){
+  const raw = sessionStorage.getItem('motoUser') || localStorage.getItem('motoUser');
+  if(!raw){
+    window.location.href='/login';
+    return false;
+  }
+  try {
+    currentUser = JSON.parse(raw);
+  } catch(e){
+    window.location.href='/login';
+    return false;
+  }
+
+  const initials=getInitials(currentUser.fullName);
+  document.getElementById('userAvatar').textContent=initials;
+  document.getElementById('userNameChip').textContent=currentUser.fullName || 'Unknown';
+  return true;
+}
+
+if(initUser()){
+  loadMotorcycle();
+}
+</script>
+</body>
+</html>

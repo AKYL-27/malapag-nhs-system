@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Exit Records — Moto Monitor</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css"/>
+<link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+<h1 class="sr-only">Exit Records of motorcycles that left the campus</h1>
+
+<div class="overlay" id="overlay" onclick="closeMobileSidebar()"></div>
+<aside class="sidebar" id="sidebar"></aside>
+
+<main class="main" id="main">
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="mobile-menu-btn" onclick="openMobileSidebar()" aria-label="Open menu">
+        <i class="ti ti-menu-2" aria-hidden="true"></i>
+      </button>
+      <div class="topbar-titles">
+        <div class="page-title">Exit Records</div>
+        <div class="breadcrumb" id="topbarDate"></div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="notif-btn" aria-label="Notifications">
+        <i class="ti ti-bell" style="font-size:17px;" aria-hidden="true"></i>
+        <span class="notif-dot"></span>
+      </div>
+      <div class="user-chip">
+        <div class="user-avatar">JR</div>
+        <span class="user-name">J. Reyes</span>
+        <i class="ti ti-chevron-down" style="font-size:13px;color:var(--text-hint);" aria-hidden="true"></i>
+      </div>
+    </div>
+  </header>
+
+  <div class="content">
+    <section aria-labelledby="exit-heading">
+      <h2 id="exit-heading" class="sr-only">Exit Records</h2>
+      <div class="filter-row">
+        <input type="text" placeholder="Search owner or plate..." id="exitSearch" oninput="filterTable('exitTbody','exitSearch')"/>
+        <input type="date" id="exitDate"/>
+        <select><option>All Exits</option><option>Morning</option><option>Afternoon</option></select>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>#</th><th>Owner</th><th>Plate Number</th><th>Motorcycle</th><th>Time Out</th><th>Status</th></tr></thead>
+            <tbody id="exitTbody">
+              <tr><td style="color:var(--text-hint)">39</td><td>Juan dela Cruz</td><td><span class="plate">XYZ-5678</span></td><td>Yamaha NMAX 155</td><td>3:38 PM</td><td><span class="badge badge-exit">Exit</span></td></tr>
+              <tr><td style="color:var(--text-hint)">38</td><td>Carlos Lim</td><td><span class="plate">GHI-3456</span></td><td>Honda PCX 160</td><td>3:19 PM</td><td><span class="badge badge-exit">Exit</span></td></tr>
+              <tr><td style="color:var(--text-hint)">37</td><td>Ben Torres</td><td><span class="plate">YZA-8901</span></td><td>Yamaha Mio Soul i 125</td><td>2:55 PM</td><td><span class="badge badge-exit">Exit</span></td></tr>
+              <tr><td style="color:var(--text-hint)">36</td><td>Clara Vega</td><td><span class="plate">BCD-2345</span></td><td>Honda BeAT Street</td><td>2:40 PM</td><td><span class="badge badge-exit">Exit</span></td></tr>
+              <tr><td style="color:var(--text-hint)">35</td><td>Dave Uy</td><td><span class="plate">EFG-6789</span></td><td>Suzuki Raider R150</td><td>2:15 PM</td><td><span class="badge badge-exit">Exit</span></td></tr>
+              <tr><td style="color:var(--text-hint)">34</td><td>Faye Soriano</td><td><span class="plate">HIJ-0123</span></td><td>Honda Giorno 125</td><td>1:47 PM</td><td><span class="badge badge-exit">Exit</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="pagination">
+        <span>Showing 6 of 39 exits</span>
+        <div class="pg-btns">
+          <button class="pg-btn">← Prev</button>
+          <button class="pg-btn active">1</button>
+          <button class="pg-btn">2</button>
+          <button class="pg-btn">Next →</button>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<script src="sidebar.js"></script>
+<script src="app.js"></script>
+<script>renderSidebar('exit');</script>
+</body>
+</html>

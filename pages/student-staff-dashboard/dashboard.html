@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Dashboard — Malapag NHS</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css"/>
+<link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+<h1 class="sr-only">Student and Staff Dashboard — Motorcycle Monitoring System</h1>
+
+<div class="overlay" id="overlay" onclick="closeMobileSidebar()"></div>
+<aside class="sidebar" id="sidebar"></aside>
+
+<main class="main" id="main">
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="mobile-menu-btn" onclick="openMobileSidebar()" aria-label="Open menu">
+        <i class="ti ti-menu-2" aria-hidden="true"></i>
+      </button>
+      <div class="topbar-titles">
+        <div class="page-title">Dashboard</div>
+        <div class="breadcrumb" id="topbarDate"></div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="notif-btn" aria-label="Notifications">
+        <i class="ti ti-bell" style="font-size:18px;" aria-hidden="true"></i>
+        <span class="notif-dot"></span>
+      </div>
+      <div class="user-chip">
+        <div class="user-avatar">MS</div>
+        <span class="user-name">Maria Santos</span>
+        <i class="ti ti-chevron-down" style="font-size:13px;color:var(--text-hint);" aria-hidden="true"></i>
+      </div>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <div class="welcome-banner">
+      <div>
+        <h2>Welcome back, Maria! 👋</h2>
+        <p>Here's a quick look at your campus motorcycle activity today.</p>
+      </div>
+      <div class="welcome-icon"><i class="ti ti-motorbike" aria-hidden="true"></i></div>
+    </div>
+
+    <div class="cards-row">
+      <!-- Profile Summary -->
+      <div class="card">
+        <div class="card-header-flex">
+          <div class="card-title"><i class="ti ti-id-badge" aria-hidden="true"></i> Profile Summary</div>
+        </div>
+        <div class="profile-summary">
+          <div class="profile-summary-avatar">MS</div>
+          <div>
+            <div class="profile-summary-name">Maria Santos</div>
+            <div class="profile-summary-meta">User ID: 2021-0457</div>
+            <span class="role-badge"><i class="ti ti-school" style="font-size:13px;" aria-hidden="true"></i> Student — BSIT 3B</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Motorcycle Status -->
+      <div class="card">
+        <div class="card-header-flex">
+          <div class="card-title"><i class="ti ti-motorbike" aria-hidden="true"></i> Motorcycle Status</div>
+          <span class="status-pill status-active"><i class="ti ti-circle-check" style="font-size:12px;" aria-hidden="true"></i> Active</span>
+        </div>
+        <div class="moto-info-row">
+          <span class="moto-label">Registered Motorcycle</span>
+          <span class="moto-value">Honda Click 125i</span>
+        </div>
+        <div class="moto-info-row">
+          <span class="moto-label">Plate Number</span>
+          <span class="plate">ABC-1234</span>
+        </div>
+        <div class="moto-info-row">
+          <span class="moto-label">QR Code Status</span>
+          <span class="status-pill status-active">Active</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-header">
+      <span class="section-title">Recent Activity</span>
+      <a class="section-link" href="history.html">View full history →</a>
+    </div>
+    <div class="card" style="margin-bottom:20px;">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Date</th><th>Time</th><th>Activity</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>Jan 15</td><td>7:15 AM</td><td>Entered Campus</td><td><span class="badge badge-completed">Completed</span></td></tr>
+            <tr><td>Jan 15</td><td>4:30 PM</td><td>Exited Campus</td><td><span class="badge badge-completed">Completed</span></td></tr>
+            <tr><td>Jan 14</td><td>7:08 AM</td><td>Entered Campus</td><td><span class="badge badge-completed">Completed</span></td></tr>
+            <tr><td>Jan 14</td><td>5:02 PM</td><td>Exited Campus</td><td><span class="badge badge-completed">Completed</span></td></tr>
+            <tr><td>Jan 13</td><td>7:21 AM</td><td>Entered Campus</td><td><span class="badge badge-completed">Completed</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn btn-primary" href="my-qrcode.html"><i class="ti ti-qrcode" aria-hidden="true"></i> View My QR Code</a>
+      <a class="btn btn-secondary" href="my-motorcycle.html"><i class="ti ti-motorbike" aria-hidden="true"></i> My Motorcycle Info</a>
+    </div>
+
+  </div>
+</main>
+
+<script src="sidebar.js"></script>
+<script src="app.js"></script>
+<script>renderSidebar('dashboard');</script>
+</body>
+</html>

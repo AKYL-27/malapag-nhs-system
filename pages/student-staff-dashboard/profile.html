@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>My Profile — Moto Monitor</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css"/>
+<link rel="stylesheet" href="styles.css"/>
+<style>
+.profile-layout{display:grid;grid-template-columns:280px 1fr;gap:18px;align-items:start;}
+@media(max-width:700px){.profile-layout{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<h1 class="sr-only">My Profile page for student or staff account information</h1>
+
+<div class="overlay" id="overlay" onclick="closeMobileSidebar()"></div>
+<aside class="sidebar" id="sidebar"></aside>
+
+<main class="main" id="main">
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="mobile-menu-btn" onclick="openMobileSidebar()" aria-label="Open menu">
+        <i class="ti ti-menu-2" aria-hidden="true"></i>
+      </button>
+      <div class="topbar-titles">
+        <div class="page-title">My Profile</div>
+        <div class="breadcrumb" id="topbarDate"></div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="notif-btn" aria-label="Notifications">
+        <i class="ti ti-bell" style="font-size:18px;" aria-hidden="true"></i>
+        <span class="notif-dot"></span>
+      </div>
+      <div class="user-chip">
+        <div class="user-avatar">MS</div>
+        <span class="user-name">Maria Santos</span>
+        <i class="ti ti-chevron-down" style="font-size:13px;color:var(--text-hint);" aria-hidden="true"></i>
+      </div>
+    </div>
+  </header>
+
+  <div class="content">
+    <div class="profile-layout">
+
+      <div class="profile-card-lg">
+        <div class="profile-avatar-lg">MS</div>
+        <div class="profile-name-lg">Maria Santos</div>
+        <span class="role-badge"><i class="ti ti-school" style="font-size:13px;" aria-hidden="true"></i> Student</span>
+        <div style="font-size:12.5px;color:var(--text-hint);margin:10px 0 18px;">BSIT 3B · College of Computing</div>
+        <div class="btn-row" style="flex-direction:column;">
+          <button class="btn btn-primary" style="width:100%;justify-content:center;"><i class="ti ti-edit" aria-hidden="true"></i> Edit Profile</button>
+          <button class="btn btn-secondary" style="width:100%;justify-content:center;"><i class="ti ti-lock" aria-hidden="true"></i> Change Password</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header-flex">
+          <div class="card-title"><i class="ti ti-user" aria-hidden="true"></i> Account Information</div>
+        </div>
+        <div style="padding:6px 20px;">
+          <div class="info-row">
+            <div class="info-icon"><i class="ti ti-user" aria-hidden="true"></i></div>
+            <div><div class="info-label">Full Name</div><div class="info-val">Maria Angela Santos</div></div>
+          </div>
+          <div class="info-row">
+            <div class="info-icon"><i class="ti ti-id-badge" aria-hidden="true"></i></div>
+            <div><div class="info-label">Student ID</div><div class="info-val">2021-0457</div></div>
+          </div>
+          <div class="info-row">
+            <div class="info-icon"><i class="ti ti-phone" aria-hidden="true"></i></div>
+            <div><div class="info-label">Contact Number</div><div class="info-val">+63 912 345 6789</div></div>
+          </div>
+          <div class="info-row">
+            <div class="info-icon"><i class="ti ti-mail" aria-hidden="true"></i></div>
+            <div><div class="info-label">Email Address</div><div class="info-val">maria.santos@campus.edu</div></div>
+          </div>
+          <div class="info-row">
+            <div class="info-icon"><i class="ti ti-school" aria-hidden="true"></i></div>
+            <div><div class="info-label">Role</div><div class="info-val">Student — BSIT 3B</div></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<script src="sidebar.js"></script>
+<script src="app.js"></script>
+<script>renderSidebar('profile');</script>
+</body>
+</html>

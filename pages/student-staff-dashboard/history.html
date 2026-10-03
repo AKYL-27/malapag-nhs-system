@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Entry & Exit History — Moto Monitor</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css"/>
+<link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+<h1 class="sr-only">My Entry and Exit History for campus motorcycle activity</h1>
+
+<div class="overlay" id="overlay" onclick="closeMobileSidebar()"></div>
+<aside class="sidebar" id="sidebar"></aside>
+
+<main class="main" id="main">
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="mobile-menu-btn" onclick="openMobileSidebar()" aria-label="Open menu">
+        <i class="ti ti-menu-2" aria-hidden="true"></i>
+      </button>
+      <div class="topbar-titles">
+        <div class="page-title">Entry & Exit History</div>
+        <div class="breadcrumb" id="topbarDate"></div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="notif-btn" aria-label="Notifications">
+        <i class="ti ti-bell" style="font-size:18px;" aria-hidden="true"></i>
+        <span class="notif-dot"></span>
+      </div>
+      <div class="user-chip">
+        <div class="user-avatar">MS</div>
+        <span class="user-name">Maria Santos</span>
+        <i class="ti ti-chevron-down" style="font-size:13px;color:var(--text-hint);" aria-hidden="true"></i>
+      </div>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <div class="filter-row">
+      <input type="text" placeholder="Search by date or status..." id="historySearch" oninput="filterHistoryTable()"/>
+      <input type="date" id="historyDate"/>
+      <select><option>All Records</option><option>This Week</option><option>This Month</option></select>
+    </div>
+
+    <div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Date</th><th>Time In</th><th>Time Out</th><th>Motorcycle Plate</th><th>Status</th></tr></thead>
+          <tbody id="historyTbody">
+            <tr><td>Jan 15</td><td>7:15 AM</td><td>4:30 PM</td><td><span class="plate">ABC-1234</span></td><td><span class="badge badge-completed">Completed</span></td></tr>
+            <tr><td>Jan 14</td><td>7:08 AM</td><td>5:02 PM</td><td><span class="plate">ABC-1234</span></td><td><span class="badge badge-completed">Completed</span></td></tr>
+            <tr><td>Jan 13</td><td>7:21 AM</td><td>4:45 PM</td><td><span class="plate">ABC-1234</span></td><td><span class="badge badge-completed">Completed</span></td></tr>
+            <tr><td>Jan 12</td><td>7:30 AM</td><td>—</td><td><span class="plate">ABC-1234</span></td><td><span class="badge badge-progress">In Progress</span></td></tr>
+            <tr><td>Jan 11</td><td>7:12 AM</td><td>4:55 PM</td><td><span class="plate">ABC-1234</span></td><td><span class="badge badge-completed">Completed</span></td></tr>
+            <tr><td>Jan 10</td><td>7:19 AM</td><td>5:10 PM</td><td><span class="plate">ABC-1234</span></td><td><span class="badge badge-completed">Completed</span></td></tr>
+            <tr><td>Jan 9</td><td>7:05 AM</td><td>4:38 PM</td><td><span class="plate">ABC-1234</span></td><td><span class="badge badge-completed">Completed</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="pagination">
+      <span>Showing 7 of 64 records</span>
+      <div class="pg-btns">
+        <button class="pg-btn">← Prev</button>
+        <button class="pg-btn active">1</button>
+        <button class="pg-btn">2</button>
+        <button class="pg-btn">3</button>
+        <button class="pg-btn">Next →</button>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script src="sidebar.js"></script>
+<script src="app.js"></script>
+<script>renderSidebar('history');</script>
+</body>
+</html>

@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Create Account — Moto Monitor</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css"/>
+<link rel="stylesheet" href="styles.css"/>
+  <link rel="shortcut icon" href="../../images/mini-logo.png" />
+
+</head>
+<body>
+<h1 class="sr-only">Student and Staff Registration — Motorcycle Monitoring System</h1>
+
+<div class="auth-page">
+  <div class="auth-wrap">
+
+    <!-- LEFT BRAND PANEL -->
+    <div class="auth-side">
+      <div class="auth-side-logo">
+        <div class="logo-icon"><i class="ti ti-motorbike" aria-hidden="true"></i></div>
+        <div>
+          <div class="school">Campus Portal</div>
+          <div class="title">Moto Monitor</div>
+        </div>
+      </div>
+      <div class="auth-side-mid">
+        <h2>Register your motorcycle for campus access.</h2>
+        <p>Create your account once and get a personal QR code for fast, secure entry and exit at every gate.</p>
+        <div class="auth-feature-list">
+          <div class="auth-feature-item"><i class="ti ti-qrcode" aria-hidden="true"></i> Instant QR code generation</div>
+          <div class="auth-feature-item"><i class="ti ti-shield-check" aria-hidden="true"></i> Verified, secure gate access</div>
+          <div class="auth-feature-item"><i class="ti ti-history" aria-hidden="true"></i> Full entry & exit history</div>
+        </div>
+      </div>
+      <div class="auth-side-foot">&copy; 2026 Campus Security Office. All rights reserved.</div>
+    </div>
+
+    <!-- RIGHT FORM PANEL -->
+    <div class="auth-form-panel">
+
+      <!-- STEP PROGRESS -->
+      <div class="auth-steps" id="stepProgress">
+        <div class="auth-step active" data-step="1"></div>
+        <div class="auth-step" data-step="2"></div>
+        <div class="auth-step" data-step="3"></div>
+      </div>
+
+      <form id="registerForm" novalidate>
+
+        <!-- ================= STEP 1: ROLE + ACCOUNT ================= -->
+        <div class="form-step" id="step1">
+          <div class="auth-form-header">
+            <h1>Create your account</h1>
+            <p>Step 1 of 3 — Tell us who you are</p>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">I am registering as <span class="req">*</span></label>
+            <div class="role-toggle" id="roleToggle">
+              <div class="role-option selected" data-role="student">
+                <i class="ti ti-school" aria-hidden="true"></i>
+                <span>Student</span>
+              </div>
+              <div class="role-option" data-role="staff">
+                <i class="ti ti-briefcase" aria-hidden="true"></i>
+                <span>Staff / Faculty</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="fullName">Full Name <span class="req">*</span></label>
+            <div class="form-input-wrap">
+              <i class="ti ti-user form-input-icon" aria-hidden="true"></i>
+              <input type="text" id="fullName" class="form-input with-icon" placeholder="e.g. Maria Angela Santos" autocomplete="name"/>
+            </div>
+            <div class="form-error" id="err-fullName"><i class="ti ti-alert-circle" aria-hidden="true"></i> Please enter your full name.</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="idNumber" id="idNumberLabel">Student ID <span class="req">*</span></label>
+            <div class="form-input-wrap">
+              <i class="ti ti-id-badge form-input-icon" aria-hidden="true"></i>
+              <input type="text" id="idNumber" class="form-input with-icon" placeholder="e.g. 2021-0457" autocomplete="off"/>
+            </div>
+            <div class="form-error" id="err-idNumber"><i class="ti ti-alert-circle" aria-hidden="true"></i> Please enter your ID number.</div>
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-group">
+              <label class="form-label" for="department">Department / Course <span class="req">*</span></label>
+              <select id="department" class="form-select">
+                <option value="">Select...</option>
+                <option>BS Information Technology</option>
+                <option>BS Computer Science</option>
+                <option>BS Accountancy</option>
+                <option>BS Education</option>
+                <option>BS Engineering</option>
+                <option>College of Nursing</option>
+                <option>Admin Office</option>
+                <option>Engineering Department</option>
+                <option>Other</option>
+              </select>
+              <div class="form-error" id="err-department"><i class="ti ti-alert-circle" aria-hidden="true"></i> Please select your department or course.</div>
+            </div>
+            <div class="form-group" id="yearLevelGroup">
+              <label class="form-label" for="yearLevel">Year Level <span class="req">*</span></label>
+              <select id="yearLevel" class="form-select">
+                <option value="">Select...</option>
+                <option>1st Year</option>
+                <option>2nd Year</option>
+                <option>3rd Year</option>
+                <option>4th Year</option>
+                <option>5th Year</option>
+              </select>
+              <div class="form-error" id="err-yearLevel"><i class="ti ti-alert-circle" aria-hidden="true"></i> Please select your year level.</div>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="btn btn-primary btn-block" onclick="if(validateStep1()){goToStep(2);}else{showToast('Please complete all required fields.');}">
+              Continue <i class="ti ti-arrow-right" aria-hidden="true"></i>
+            </button>
+          </div>
+
+          <div class="auth-footer-link">Already have an account? <a href="login.html">Sign in</a></div>
+        </div>
+
+        <!-- ================= STEP 2: CONTACT + PASSWORD ================= -->
+        <div class="form-step" id="step2" style="display:none;">
+          <div class="auth-form-header">
+            <h1>Account credentials</h1>
+            <p>Step 2 of 3 — Contact details and login info</p>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="email">Email Address <span class="req">*</span></label>
+            <div class="form-input-wrap">
+              <i class="ti ti-mail form-input-icon" aria-hidden="true"></i>
+              <input type="email" id="email" class="form-input with-icon" placeholder="you@campus.edu" autocomplete="email"/>
+            </div>
+            <div class="form-error" id="err-email"><i class="ti ti-alert-circle" aria-hidden="true"></i> Please enter a valid email address.</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="contactNumber">Contact Number <span class="req">*</span></label>
+            <div class="form-input-wrap">
+              <i class="ti ti-phone form-input-icon" aria-hidden="true"></i>
+              <input type="tel" id="contactNumber" class="form-input with-icon" placeholder="+63 912 345 6789" autocomplete="tel"/>
+            </div>
+            <div class="form-error" id="err-contactNumber"><i class="ti ti-alert-circle" aria-hidden="true"></i> Please enter a valid contact number.</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="password">Password <span class="req">*</span></label>
+            <div class="form-input-wrap">
+              <i class="ti ti-lock form-input-icon" aria-hidden="true"></i>
+              <input type="password" id="password" class="form-input with-icon" placeholder="Create a password" autocomplete="new-password" oninput="checkPasswordStrength()"/>
+              <button type="button" class="form-input-toggle" onclick="togglePassword('password',this)"><i class="ti ti-eye" aria-hidden="true"></i></button>
+            </div>
+            <div class="pw-strength" id="pwStrengthBars">
+              <div class="pw-strength-bar"></div><div class="pw-strength-bar"></div><div class="pw-strength-bar"></div>
+            </div>
+            <div class="pw-strength-label" id="pwStrengthLabel">Use 8+ characters with a mix of letters & numbers</div>
+            <div class="form-error" id="err-password"><i class="ti ti-alert-circle" aria-hidden="true"></i> Password must be at least 8 characters.</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="confirmPassword">Confirm Password <span class="req">*</span></label>
+            <div class="form-input-wrap">
+              <i class="ti ti-lock form-input-icon" aria-hidden="true"></i>
+              <input type="password" id="confirmPassword" class="form-input with-icon" placeholder="Re-enter your password" autocomplete="new-password"/>
+              <button type="button" class="form-input-toggle" onclick="togglePassword('confirmPassword',this)"><i class="ti ti-eye" aria-hidden="true"></i></button>
+            </div>
+            <div class="form-error" id="err-confirmPassword"><i class="ti ti-alert-circle" aria-hidden="true"></i> Passwords do not match.</div>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="btn btn-secondary" onclick="goToStep(1)"><i class="ti ti-arrow-left" aria-hidden="true"></i> Back</button>
+            <button type="button" class="btn btn-primary btn-block" onclick="validateStep2()">Continue <i class="ti ti-arrow-right" aria-hidden="true"></i></button>
+          </div>
+        </div>
+
+        <!-- ================= STEP 3: MOTORCYCLE INFO ================= -->
+        <div class="form-step" id="step3" style="display:none;">
+          <div class="auth-form-header">
+            <h1>Register your motorcycle</h1>
+            <p>Step 3 of 3 — Optional, but required for gate access</p>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="hasMotorcycle">
+              <input type="checkbox" id="hasMotorcycle" checked onchange="toggleMotoFields()" style="width:16px;height:16px;accent-color:var(--blue-600);vertical-align:-2px;margin-right:6px;"/>
+              I own a motorcycle and will bring it to campus
+            </label>
+          </div>
+
+          <div id="motoFields">
+            <div class="form-row-2">
+              <div class="form-group">
+                <label class="form-label" for="motoBrand">Motorcycle Brand <span class="req">*</span></label>
+                <select id="motoBrand" class="form-select">
+                  <option value="">Select...</option>
+                  <option>Honda</option>
+                  <option>Yamaha</option>
+                  <option>Suzuki</option>
+                  <option>Kawasaki</option>
+                  <option>Kymco</option>
+                  <option>Other</option>
+                </select>
+                <div class="form-error" id="err-motoBrand"><i class="ti ti-alert-circle" aria-hidden="true"></i> Please select a brand.</div>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="motoModel">Model <span class="req">*</span></label>
+                <input type="text" id="motoModel" class="form-input" placeholder="e.g. Click 125i"/>
+                <div class="form-error" id="err-motoModel"><i class="ti ti-alert-circle" aria-hidden="true"></i> Please enter the model.</div>
+              </div>
+            </div>
+
+            <div class="form-row-2">
+              <div class="form-group">
+                <label class="form-label" for="motoColor">Color <span class="req">*</span></label>
+                <input type="text" id="motoColor" class="form-input" placeholder="e.g. Matte Black"/>
+                <div class="form-error" id="err-motoColor"><i class="ti ti-alert-circle" aria-hidden="true"></i> Please enter the color.</div>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="plateNumber">Plate Number <span class="req">*</span></label>
+                <input type="text" id="plateNumber" class="form-input" placeholder="e.g. ABC-1234" style="text-transform:uppercase;"/>
+                <div class="form-error" id="err-plateNumber"><i class="ti ti-alert-circle" aria-hidden="true"></i> Please enter a valid plate number.</div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Upload OR / CR (Optional)</label>
+              <div class="file-upload-box" id="fileUploadBox" onclick="document.getElementById('orcrFile').click()">
+                <i class="ti ti-cloud-upload" aria-hidden="true"></i>
+                <div class="fu-title" id="fuTitle">Click to upload OR/CR document</div>
+                <div class="fu-sub" id="fuSub">PNG, JPG, or PDF — max 5MB</div>
+              </div>
+              <input type="file" id="orcrFile" accept=".png,.jpg,.jpeg,.pdf" style="display:none;" onchange="handleFileUpload(this)"/>
+            </div>
+          </div>
+
+          <div class="checkbox-row" style="margin-top:18px;">
+            <input type="checkbox" id="agreeTerms"/>
+            <label for="agreeTerms">I confirm that the information provided is accurate and I agree to the <a href="#">Terms of Service</a> and <a href="#">Data Privacy Policy</a> of the campus monitoring system.</label>
+          </div>
+          <div class="form-error" id="err-agreeTerms" style="margin-bottom:10px;"><i class="ti ti-alert-circle" aria-hidden="true"></i> You must agree to the terms to continue.</div>
+
+          <div class="form-actions">
+            <button type="button" class="btn btn-secondary" onclick="goToStep(2)"><i class="ti ti-arrow-left" aria-hidden="true"></i> Back</button>
+            <button type="button" class="btn btn-primary btn-block" onclick="submitRegistration()">
+              <i class="ti ti-circle-check" aria-hidden="true"></i> Complete Registration
+            </button>
+          </div>
+        </div>
+
+        <!-- ================= SUCCESS SCREEN ================= -->
+        <div class="form-step" id="stepSuccess" style="display:none;">
+          <div class="success-screen">
+            <div class="success-icon"><i class="ti ti-check" aria-hidden="true"></i></div>
+            <h2>Registration submitted!</h2>
+            <p id="successMsg">Your account has been created. Your motorcycle and QR code are now pending verification by the security office — you'll be notified once approved.</p>
+            <a href="login.html" class="btn btn-primary btn-block"><i class="ti ti-login" aria-hidden="true"></i> Go to Sign In</a>
+          </div>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="scan-toast" id="scanToast" style="position:fixed;bottom:24px;right:24px;z-index:999;background:var(--text);color:#fff;padding:12px 16px;border-radius:10px;font-size:13px;display:flex;align-items:center;gap:10px;box-shadow:0 4px 20px rgba(0,0,0,0.2);transform:translateY(80px);opacity:0;transition:all .3s;max-width:300px;">
+  <i class="ti ti-alert-circle" style="font-size:18px;color:#fca5a5;" aria-hidden="true"></i>
+  <span id="toastMsg">Notice</span>
+</div>
+<style>.scan-toast.show{transform:translateY(0)!important;opacity:1!important;}</style>
+
+<script>
+let currentStep=1;
+let selectedRole='student';
+let selectedOrcrFile=null; // holds the raw File object for the OR/CR upload
+
+// ── ROLE TOGGLE ──────────────────────────────────────────────
+document.querySelectorAll('.role-option').forEach(opt=>{
+  opt.addEventListener('click',()=>{
+    document.querySelectorAll('.role-option').forEach(o=>o.classList.remove('selected'));
+    opt.classList.add('selected');
+    selectedRole=opt.dataset.role;
+    updateRoleLabels();
+  });
+});
+
+function updateRoleLabels(){
+  const idLabel=document.getElementById('idNumberLabel');
+  const idInput=document.getElementById('idNumber');
+  const yearGroup=document.getElementById('yearLevelGroup');
+  if(selectedRole==='staff'){
+    idLabel.innerHTML='Employee ID <span class="req">*</span>';
+    idInput.placeholder='e.g. EMP-2024-0089';
+    yearGroup.style.display='none';
+  }else{
+    idLabel.innerHTML='Student ID <span class="req">*</span>';
+    idInput.placeholder='e.g. 2021-0457';
+    yearGroup.style.display='block';
+  }
+}
+
+// ── STEP NAVIGATION ──────────────────────────────────────────
+function goToStep(step){
+  document.querySelectorAll('.form-step').forEach(s=>s.style.display='none');
+  const target = step===4 ? document.getElementById('stepSuccess') : document.getElementById('step'+step);
+  target.style.display='block';
+  currentStep=step;
+  updateStepProgress();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function updateStepProgress(){
+  document.querySelectorAll('.auth-step').forEach(el=>{
+    const n=parseInt(el.dataset.step);
+    el.classList.remove('active','done');
+    if(n<currentStep) el.classList.add('done');
+    else if(n===currentStep) el.classList.add('active');
+  });
+}
+
+// ── VALIDATION HELPERS ───────────────────────────────────────
+function setError(fieldId,isError){
+  const group=document.getElementById(fieldId).closest('.form-group');
+  const err=document.getElementById('err-'+fieldId);
+  if(group) group.classList.toggle('error',isError);
+  if(err) err.classList.toggle('show',isError);
+}
+
+function validateStep1(){
+  let valid=true;
+  const fullName=document.getElementById('fullName').value.trim();
+  const idNumber=document.getElementById('idNumber').value.trim();
+  const department=document.getElementById('department').value;
+  const yearLevel=document.getElementById('yearLevel').value;
+
+  setError('fullName', fullName.length<2); if(fullName.length<2) valid=false;
+  setError('idNumber', idNumber.length<3); if(idNumber.length<3) valid=false;
+  setError('department', department===''); if(department==='') valid=false;
+
+  if(selectedRole==='student'){
+    setError('yearLevel', yearLevel===''); if(yearLevel==='') valid=false;
+  }
+  return valid;
+}
+
+function validateStep2(){
+  let valid=true;
+  const email=document.getElementById('email').value.trim();
+  const contact=document.getElementById('contactNumber').value.trim();
+  const password=document.getElementById('password').value;
+  const confirmPassword=document.getElementById('confirmPassword').value;
+
+  const emailOk=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  setError('email', !emailOk); if(!emailOk) valid=false;
+
+  const contactOk=contact.replace(/\D/g,'').length>=10;
+  setError('contactNumber', !contactOk); if(!contactOk) valid=false;
+
+  setError('password', password.length<8); if(password.length<8) valid=false;
+
+  setError('confirmPassword', confirmPassword!==password || confirmPassword===''); 
+  if(confirmPassword!==password || confirmPassword==='') valid=false;
+
+  if(valid) goToStep(3);
+  else showToast('Please fix the highlighted fields.');
+  return valid;
+}
+
+function checkPasswordStrength(){
+  const val=document.getElementById('password').value;
+  const bars=document.querySelectorAll('.pw-strength-bar');
+  const label=document.getElementById('pwStrengthLabel');
+  let score=0;
+  if(val.length>=8) score++;
+  if(/[A-Z]/.test(val)&&/[a-z]/.test(val)) score++;
+  if(/\d/.test(val)&&/[^A-Za-z0-9]/.test(val)) score++;
+
+  bars.forEach(b=>b.className='pw-strength-bar');
+  if(val.length===0){ label.textContent='Use 8+ characters with a mix of letters & numbers'; label.style.color='var(--text-hint)'; return; }
+  if(score<=1){ bars[0].classList.add('weak'); label.textContent='Weak password'; label.style.color='#ef4444'; }
+  else if(score===2){ bars[0].classList.add('fair'); bars[1].classList.add('fair'); label.textContent='Fair password'; label.style.color='var(--amber-text)'; }
+  else { bars.forEach(b=>b.classList.add('strong')); label.textContent='Strong password'; label.style.color='var(--green-text)'; }
+}
+
+function togglePassword(fieldId,btn){
+  const input=document.getElementById(fieldId);
+  const icon=btn.querySelector('i');
+  if(input.type==='password'){ input.type='text'; icon.className='ti ti-eye-off'; }
+  else { input.type='password'; icon.className='ti ti-eye'; }
+}
+
+// ── MOTORCYCLE STEP ──────────────────────────────────────────
+function toggleMotoFields(){
+  const checked=document.getElementById('hasMotorcycle').checked;
+  document.getElementById('motoFields').style.display=checked?'block':'none';
+}
+
+function handleFileUpload(input){
+  const box=document.getElementById('fileUploadBox');
+  if(input.files && input.files[0]){
+    const file=input.files[0];
+
+    const allowedExt=['png','jpg','jpeg','pdf'];
+    const ext=file.name.split('.').pop().toLowerCase();
+    if(!allowedExt.includes(ext)){
+      showToast('OR/CR must be a PNG, JPG, or PDF file.');
+      input.value='';
+      selectedOrcrFile=null;
+      return;
+    }
+    if(file.size > 5*1024*1024){
+      showToast('OR/CR file must be 5MB or smaller.');
+      input.value='';
+      selectedOrcrFile=null;
+      return;
+    }
+
+    selectedOrcrFile=file;
+    box.classList.add('has-file');
+    document.getElementById('fuTitle').textContent=file.name;
+    document.getElementById('fuSub').textContent='File selected — click to change';
+  }
+}
+
+function validateStep3(){
+  const hasMoto=document.getElementById('hasMotorcycle').checked;
+  let valid=true;
+
+  if(hasMoto){
+    const brand=document.getElementById('motoBrand').value;
+    const model=document.getElementById('motoModel').value.trim();
+    const color=document.getElementById('motoColor').value.trim();
+    const plate=document.getElementById('plateNumber').value.trim();
+
+    setError('motoBrand', brand===''); if(brand==='') valid=false;
+    setError('motoModel', model.length<2); if(model.length<2) valid=false;
+    setError('motoColor', color.length<2); if(color.length<2) valid=false;
+    setError('plateNumber', plate.length<4); if(plate.length<4) valid=false;
+  }
+
+  const agreed=document.getElementById('agreeTerms').checked;
+  document.getElementById('err-agreeTerms').classList.toggle('show', !agreed);
+  if(!agreed) valid=false;
+
+  return valid;
+}
+
+// ── SUBMIT: register account, then create motorcycle + upload OR/CR ──
+async function submitRegistration(){
+  if(!validateStep3()){
+    showToast('Please complete all required fields.');
+    return;
+  }
+
+  const hasMoto = document.getElementById('hasMotorcycle').checked;
+  const submitBtn = document.querySelector('#step3 .btn-primary');
+  const originalBtnHTML = submitBtn.innerHTML;
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<i class="ti ti-loader-2" aria-hidden="true"></i> Submitting...';
+
+  const payload = {
+    fullName: document.getElementById('fullName').value.trim(),
+    role: selectedRole,
+    idNumber: document.getElementById('idNumber').value.trim(),
+    department: document.getElementById('department').value,
+    yearLevel: selectedRole === 'student' ? document.getElementById('yearLevel').value : '',
+    email: document.getElementById('email').value.trim(),
+    contactNumber: document.getElementById('contactNumber').value.trim(),
+    password: document.getElementById('password').value,
+  };
+
+  if(hasMoto){
+    payload.motorcycle = {
+      brand: document.getElementById('motoBrand').value,
+      model: document.getElementById('motoModel').value.trim(),
+      color: document.getElementById('motoColor').value.trim(),
+      plate: document.getElementById('plateNumber').value.trim(),
+    };
+  }
+
+  try {
+    // Step 1: create the account (and motorcycle record, if provided).
+    const res = await fetch('/api/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const result = await res.json();
+
+    if(!res.ok){
+      showToast(result.error || 'Something went wrong. Please try again.');
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalBtnHTML;
+      return;
+    }
+
+    // Step 2: if a motorcycle was created and an OR/CR file was selected,
+    // upload it separately (multipart) and attach it to that motorcycle.
+    if(hasMoto && selectedOrcrFile && result.motorcycle && result.motorcycle.id){
+      const formData = new FormData();
+      formData.append('file', selectedOrcrFile);
+
+      try {
+        const uploadRes = await fetch(`/api/motorcycles/${result.motorcycle.id}/orcr`, {
+          method: 'POST',
+          body: formData,
+        });
+        if(!uploadRes.ok){
+          const uploadResult = await uploadRes.json().catch(()=>({}));
+          // Account + motorcycle already exist at this point; don't block
+          // success on a failed file upload, just let the user know.
+          showToast(uploadResult.error || 'Account created, but the OR/CR upload failed. You can add it later.');
+        }
+      } catch (uploadErr) {
+        showToast('Account created, but the OR/CR upload failed. You can add it later.');
+      }
+    }
+
+    document.getElementById('successMsg').textContent = hasMoto
+      ? "Your account has been created. Your motorcycle and QR code are now pending verification by the security office — you'll be notified once approved."
+      : "Your account has been created. You can add your motorcycle details anytime from the My Motorcycle page.";
+    goToStep(4);
+  } catch (err) {
+    showToast('Could not reach the server. Please check your connection.');
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = originalBtnHTML;
+  }
+}
+
+// ── TOAST ────────────────────────────────────────────────────
+function showToast(msg){
+  const t=document.getElementById('scanToast');
+  document.getElementById('toastMsg').textContent=msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+</script>
+</body>
+</html>

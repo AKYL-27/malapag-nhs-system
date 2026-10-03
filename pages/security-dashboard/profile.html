@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>My Profile — Moto Monitor</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css"/>
+<link rel="stylesheet" href="styles.css"/>
+  <link rel="shortcut icon" href="../../images/mini-logo.png" />
+
+</head>
+<body>
+<h1 class="sr-only">Security personnel profile page</h1>
+
+<div class="overlay" id="overlay" onclick="closeMobileSidebar()"></div>
+<aside class="sidebar" id="sidebar"></aside>
+
+<main class="main" id="main">
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="mobile-menu-btn" onclick="openMobileSidebar()" aria-label="Open menu">
+        <i class="ti ti-menu-2" aria-hidden="true"></i>
+      </button>
+      <div class="topbar-titles">
+        <div class="page-title">My Profile</div>
+        <div class="breadcrumb" id="topbarDate"></div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="notif-btn" aria-label="Notifications">
+        <i class="ti ti-bell" style="font-size:17px;" aria-hidden="true"></i>
+        <span class="notif-dot"></span>
+      </div>
+      <div class="user-chip">
+        <div class="user-avatar" id="chipAvatar">--</div>
+        <span class="user-name" id="chipName">Guard</span>
+        <i class="ti ti-chevron-down" style="font-size:13px;color:var(--text-hint);" aria-hidden="true"></i>
+      </div>
+    </div>
+  </header>
+
+  <div class="content">
+    <section aria-labelledby="profile-heading">
+      <h2 id="profile-heading" class="sr-only">My Profile</h2>
+      <div class="profile-wrap">
+        <div class="profile-card">
+          <div class="profile-avatar-lg" id="avatarLg">--</div>
+          <div class="profile-name-lg" id="nameLg">Loading...</div>
+          <div class="profile-role-badge"><i class="ti ti-shield-check" style="font-size:13px;" aria-hidden="true"></i> Security Personnel</div>
+          <div style="font-size:12px;color:var(--text-hint);margin-bottom:16px;" id="postLg">—</div>
+          <div class="profile-stats">
+            <div class="profile-stat"><div class="num" id="statToday">—</div><div class="lbl">Today</div></div>
+            <div class="profile-divider"></div>
+            <div class="profile-stat"><div class="num" id="statMonth">—</div><div class="lbl">This Month</div></div>
+          </div>
+          <button class="chpw-btn" type="button" onclick="openPwDialog()"><i class="ti ti-lock" style="font-size:16px;" aria-hidden="true"></i> Change Password</button>
+        </div>
+        <div class="profile-info-card">
+          <div class="info-section-title">Account Information</div>
+          <div class="info-section-sub">Your profile details</div>
+          <div class="info-row"><div class="info-icon"><i class="ti ti-user" aria-hidden="true"></i></div><div><div class="info-label">Full Name</div><div class="info-val" id="infoName">—</div></div></div>
+          <div class="info-row"><div class="info-icon"><i class="ti ti-id-badge" aria-hidden="true"></i></div><div><div class="info-label">Badge / Employee ID</div><div class="info-val" id="infoId">—</div></div></div>
+          <div class="info-row"><div class="info-icon"><i class="ti ti-mail" aria-hidden="true"></i></div><div><div class="info-label">Email</div><div class="info-val" id="infoEmail">—</div></div></div>
+          <div class="info-row"><div class="info-icon"><i class="ti ti-phone" aria-hidden="true"></i></div><div><div class="info-label">Contact Number</div><div class="info-val" id="infoContact">—</div></div></div>
+          <div class="info-row"><div class="info-icon"><i class="ti ti-shield" aria-hidden="true"></i></div><div><div class="info-label">Role</div><div class="info-val">Security Personnel</div></div></div>
+          <div class="info-row"><div class="info-icon"><i class="ti ti-map-pin" aria-hidden="true"></i></div><div><div class="info-label">Assigned Post</div><div class="info-val" id="infoPost">—</div></div></div>
+          <div class="info-row"><div class="info-icon"><i class="ti ti-calendar" aria-hidden="true"></i></div><div><div class="info-label">Member Since</div><div class="info-val" id="infoSince">—</div></div></div>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<!-- CHANGE PASSWORD DIALOG -->
+<dialog id="pwDialog" style="border:none;border-radius:14px;padding:0;max-width:380px;width:calc(100% - 32px);box-shadow:0 10px 40px rgba(0,0,0,.25);">
+  <form id="pwForm" novalidate style="padding:22px;">
+    <div style="font-size:17px;font-weight:600;margin-bottom:4px;">Change password</div>
+    <div style="font-size:13px;color:var(--text-hint);margin-bottom:16px;">Enter your current password, then a new one.</div>
+
+    <div class="form-group">
+      <label class="form-label" for="curPw">Current password</label>
+      <input type="password" id="curPw" class="form-input" autocomplete="current-password"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="newPw">New password</label>
+      <input type="password" id="newPw" class="form-input" autocomplete="new-password"/>
+      <div class="pw-strength-label" style="color:var(--text-hint);">At least 8 characters.</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="newPw2">Confirm new password</label>
+      <input type="password" id="newPw2" class="form-input" autocomplete="new-password"/>
+    </div>
+    <div id="pwError" style="display:none;color:#ef4444;font-size:13px;margin-bottom:10px;"></div>
+
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:6px;">
+      <button type="button" class="btn btn-secondary" onclick="closePwDialog()">Cancel</button>
+      <button type="submit" class="btn btn-primary" id="pwSubmit">Update password</button>
+    </div>
+  </form>
+</dialog>
+
+<div id="profToast" style="position:fixed;bottom:24px;right:24px;z-index:999;background:var(--text);color:#fff;padding:12px 16px;border-radius:10px;font-size:13px;box-shadow:0 4px 20px rgba(0,0,0,0.2);transform:translateY(80px);opacity:0;transition:all .3s;max-width:300px;">
+  <span id="profToastMsg"></span>
+</div>
+
+<script src="sidebar.js"></script>
+<script src="app.js"></script>
+<script>renderSidebar('profile');</script>
+<script>
+// ── SIGNED-IN GUARD (saved by login.html) ────────────────────
+let guard = null;
+try { guard = JSON.parse(sessionStorage.getItem('guard')); } catch (_) {}
+if (!guard || !guard.id) window.location.replace('login.html');
+
+function notify(msg) {
+  const t = document.getElementById('profToast');
+  document.getElementById('profToastMsg').textContent = msg;
+  t.style.transform = 'translateY(0)';
+  t.style.opacity = '1';
+  setTimeout(() => { t.style.transform = 'translateY(80px)'; t.style.opacity = '0'; }, 3000);
+}
+
+function initials(name) {
+  const p = (name || '').trim().split(/\s+/).filter(Boolean);
+  if (!p.length) return '--';
+  return (p[0][0] + (p.length > 1 ? p[p.length - 1][0] : '')).toUpperCase();
+}
+
+function fillProfile(g) {
+  const post = g.assignedPost || 'Not yet assigned';
+  document.getElementById('chipAvatar').textContent = initials(g.fullName);
+  document.getElementById('chipName').textContent = g.fullName || 'Guard';
+  document.getElementById('avatarLg').textContent = initials(g.fullName);
+  document.getElementById('nameLg').textContent = g.fullName || '—';
+  document.getElementById('postLg').textContent = post;
+  document.getElementById('infoName').textContent = g.fullName || '—';
+  document.getElementById('infoId').textContent = g.idNumber || '—';
+  document.getElementById('infoEmail').textContent = g.email || '—';
+  document.getElementById('infoContact').textContent = g.contactNumber || '—';
+  document.getElementById('infoPost').textContent = post;
+
+  let since = '—';
+  if (g.created_at) {
+    const d = new Date(g.created_at);
+    if (!isNaN(d)) since = d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  }
+  document.getElementById('infoSince').textContent = since;
+}
+
+async function loadProfile() {
+  fillProfile(guard); // show what we have from login right away
+
+  try {
+    const res = await fetch('/api/security/' + encodeURIComponent(guard.id));
+    if (res.ok) {
+      guard = await res.json();
+      try { sessionStorage.setItem('guard', JSON.stringify(guard)); } catch (_) {}
+      fillProfile(guard);
+    } else if (res.status === 404) {
+      // Account no longer exists — sign out.
+      sessionStorage.removeItem('guard');
+      window.location.replace('login.html');
+      return;
+    }
+  } catch (_) {
+    notify('Could not refresh your profile. Showing saved details.');
+  }
+
+  try {
+    const res = await fetch('/api/security/' + encodeURIComponent(guard.id) + '/stats');
+    if (res.ok) {
+      const s = await res.json();
+      document.getElementById('statToday').textContent = s.today;
+      document.getElementById('statMonth').textContent = s.this_month;
+    }
+  } catch (_) {
+    document.getElementById('statToday').textContent = '—';
+    document.getElementById('statMonth').textContent = '—';
+  }
+}
+
+// ── CHANGE PASSWORD ──────────────────────────────────────────
+const pwDialog = document.getElementById('pwDialog');
+const pwError = document.getElementById('pwError');
+
+function openPwDialog() {
+  document.getElementById('pwForm').reset();
+  pwError.style.display = 'none';
+  pwDialog.showModal();
+}
+function closePwDialog() { pwDialog.close(); }
+
+function showPwError(msg) {
+  pwError.textContent = msg;
+  pwError.style.display = 'block';
+}
+
+document.getElementById('pwForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const currentPassword = document.getElementById('curPw').value;
+  const newPassword = document.getElementById('newPw').value;
+  const confirm = document.getElementById('newPw2').value;
+
+  if (!currentPassword || !newPassword || !confirm) return showPwError('Please fill in all fields.');
+  if (newPassword.length < 8) return showPwError('New password must be at least 8 characters.');
+  if (newPassword !== confirm) return showPwError('New passwords do not match.');
+
+  const btn = document.getElementById('pwSubmit');
+  btn.disabled = true;
+  try {
+    const res = await fetch('/api/security/' + encodeURIComponent(guard.id) + '/password', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+    const result = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      showPwError(result.error || 'Something went wrong. Please try again.');
+    } else {
+      closePwDialog();
+      notify('Password updated.');
+    }
+  } catch (_) {
+    showPwError('Could not reach the server. Please check your connection.');
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+if (guard && guard.id) loadProfile();
+</script>
+</body>
+</html>

@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Create Account — Moto Monitor</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css"/>
+<link rel="stylesheet" href="styles.css"/>
+  <link rel="shortcut icon" href="../../images/mini-logo.png" />
+
+</head>
+<body>
+<h1 class="sr-only">Security Personnel Registration — Motorcycle Monitoring System</h1>
+
+<div class="auth-page">
+  <div class="auth-wrap">
+
+    <!-- LEFT BRAND PANEL -->
+    <div class="auth-side">
+      <div class="auth-side-logo">
+        <div class="logo-icon"><i class="ti ti-motorbike" aria-hidden="true"></i></div>
+        <div>
+          <div class="school">Campus Security</div>
+          <div class="title">Moto Monitor</div>
+        </div>
+      </div>
+      <div class="auth-side-mid">
+        <h2>Register as campus security personnel.</h2>
+        <p>Create your account to scan motorcycle QR codes, verify riders, and log entries and exits at your assigned post.</p>
+        <div class="auth-feature-list">
+          <div class="auth-feature-item"><i class="ti ti-scan" aria-hidden="true"></i> Fast QR scanning at the gate</div>
+          <div class="auth-feature-item"><i class="ti ti-shield-check" aria-hidden="true"></i> Verify registered motorcycles</div>
+          <div class="auth-feature-item"><i class="ti ti-history" aria-hidden="true"></i> Full entry &amp; exit logs</div>
+        </div>
+      </div>
+      <div class="auth-side-foot">&copy; 2026 Campus Security Office. All rights reserved.</div>
+    </div>
+
+    <!-- RIGHT FORM PANEL -->
+    <div class="auth-form-panel">
+
+      <form id="registerForm" novalidate>
+
+        <div class="form-step" id="stepForm">
+          <div class="auth-form-header">
+            <h1>Create your account</h1>
+            <p>Enter your security personnel details</p>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="fullName">Full name <span class="req">*</span></label>
+            <div class="form-input-wrap">
+              <i class="ti ti-user form-input-icon" aria-hidden="true"></i>
+              <input type="text" id="fullName" class="form-input with-icon" placeholder="e.g. Juan Dela Cruz" autocomplete="name"/>
+            </div>
+            <div class="form-error" id="err-fullName"><i class="ti ti-alert-circle" aria-hidden="true"></i> Please enter your full name.</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="badgeId">Badge / employee ID <span class="req">*</span></label>
+            <div class="form-input-wrap">
+              <i class="ti ti-id-badge form-input-icon" aria-hidden="true"></i>
+              <input type="text" id="badgeId" class="form-input with-icon" placeholder="e.g. SEC-2024-0089" autocomplete="off"/>
+            </div>
+            <div class="form-error" id="err-badgeId"><i class="ti ti-alert-circle" aria-hidden="true"></i> Please enter your badge or employee ID.</div>
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-group">
+              <label class="form-label" for="contactNumber">Contact number <span class="req">*</span></label>
+              <div class="form-input-wrap">
+                <i class="ti ti-phone form-input-icon" aria-hidden="true"></i>
+                <input type="tel" id="contactNumber" class="form-input with-icon" placeholder="+63 912 345 6789" autocomplete="tel"/>
+              </div>
+              <div class="form-error" id="err-contactNumber"><i class="ti ti-alert-circle" aria-hidden="true"></i> Please enter a valid contact number.</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="email">Email address <span class="req">*</span></label>
+              <div class="form-input-wrap">
+                <i class="ti ti-mail form-input-icon" aria-hidden="true"></i>
+                <input type="email" id="email" class="form-input with-icon" placeholder="you@campus.edu" autocomplete="email"/>
+              </div>
+              <div class="form-error" id="err-email"><i class="ti ti-alert-circle" aria-hidden="true"></i> Please enter a valid email address.</div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="assignedPost">Assigned post (optional)</label>
+            <select id="assignedPost" class="form-select">
+              <option value="">Not yet assigned</option>
+              <option>Main Gate</option>
+              <option>Back Gate</option>
+              <option>Parking Lot Patrol</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="password">Password <span class="req">*</span></label>
+            <div class="form-input-wrap">
+              <i class="ti ti-lock form-input-icon" aria-hidden="true"></i>
+              <input type="password" id="password" class="form-input with-icon" placeholder="Create a password" autocomplete="new-password"/>
+              <button type="button" class="form-input-toggle" onclick="togglePassword('password',this)" aria-label="Show or hide password">Show</button>
+            </div>
+            <div class="pw-strength-label" style="color:var(--text-hint);">At least 8 characters.</div>
+            <div class="form-error" id="err-password"><i class="ti ti-alert-circle" aria-hidden="true"></i> Password must be at least 8 characters.</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="confirmPassword">Confirm password <span class="req">*</span></label>
+            <div class="form-input-wrap">
+              <i class="ti ti-lock form-input-icon" aria-hidden="true"></i>
+              <input type="password" id="confirmPassword" class="form-input with-icon" placeholder="Re-enter your password" autocomplete="new-password"/>
+              <button type="button" class="form-input-toggle" onclick="togglePassword('confirmPassword',this)" aria-label="Show or hide password">Show</button>
+            </div>
+            <div class="form-error" id="err-confirmPassword"><i class="ti ti-alert-circle" aria-hidden="true"></i> Passwords do not match.</div>
+          </div>
+
+          <div class="checkbox-row" style="margin-top:18px;">
+            <input type="checkbox" id="agreeTerms"/>
+            <label for="agreeTerms">I agree to the campus security <a href="#">terms &amp; conditions</a>.</label>
+          </div>
+          <div class="form-error" id="err-agreeTerms" style="margin-bottom:10px;"><i class="ti ti-alert-circle" aria-hidden="true"></i> You must agree to the terms to continue.</div>
+
+          <div class="form-actions">
+            <button type="button" class="btn btn-primary btn-block" id="submitBtn" onclick="submitRegistration()">
+              <i class="ti ti-circle-check" aria-hidden="true"></i> Create account
+            </button>
+          </div>
+
+          <div class="auth-footer-link">Already have an account? <a href="login.html">Sign in</a></div>
+        </div>
+
+        <!-- SUCCESS SCREEN -->
+        <div class="form-step" id="stepSuccess" style="display:none;">
+          <div class="success-screen">
+            <div class="success-icon"><i class="ti ti-check" aria-hidden="true"></i></div>
+            <h2>Account created!</h2>
+            <p id="successMsg">Your security account has been created. You can now sign in.</p>
+            <a href="login.html" class="btn btn-primary btn-block"><i class="ti ti-login" aria-hidden="true"></i> Go to Sign In</a>
+          </div>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="scan-toast" id="scanToast" style="position:fixed;bottom:24px;right:24px;z-index:999;background:var(--text);color:#fff;padding:12px 16px;border-radius:10px;font-size:13px;display:flex;align-items:center;gap:10px;box-shadow:0 4px 20px rgba(0,0,0,0.2);transform:translateY(80px);opacity:0;transition:all .3s;max-width:300px;">
+  <i class="ti ti-alert-circle" style="font-size:18px;color:#fca5a5;" aria-hidden="true"></i>
+  <span id="toastMsg">Notice</span>
+</div>
+<style>
+  .scan-toast.show{transform:translateY(0)!important;opacity:1!important;}
+  .form-input-toggle{font-size:12px;font-weight:600;}
+</style>
+
+<script>
+// ── VALIDATION HELPERS ───────────────────────────────────────
+function setError(fieldId,isError){
+  const group=document.getElementById(fieldId).closest('.form-group');
+  const err=document.getElementById('err-'+fieldId);
+  if(group) group.classList.toggle('error',isError);
+  if(err) err.classList.toggle('show',isError);
+}
+
+function validateForm(){
+  let valid=true;
+  const fullName=document.getElementById('fullName').value.trim();
+  const badgeId=document.getElementById('badgeId').value.trim();
+  const contact=document.getElementById('contactNumber').value.trim();
+  const email=document.getElementById('email').value.trim();
+  const password=document.getElementById('password').value;
+  const confirmPassword=document.getElementById('confirmPassword').value;
+
+  const checks=[
+    ['fullName', fullName.length<2],
+    ['badgeId', badgeId.length<3],
+    ['contactNumber', contact.replace(/\D/g,'').length<10],
+    ['email', !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)],
+    ['password', password.length<8],
+    ['confirmPassword', confirmPassword===''||confirmPassword!==password],
+  ];
+  checks.forEach(([id,bad])=>{ setError(id,bad); if(bad) valid=false; });
+
+  const agreed=document.getElementById('agreeTerms').checked;
+  document.getElementById('err-agreeTerms').classList.toggle('show',!agreed);
+  if(!agreed) valid=false;
+
+  return valid;
+}
+
+function togglePassword(fieldId,btn){
+  const input=document.getElementById(fieldId);
+  if(input.type==='password'){ input.type='text'; btn.textContent='Hide'; }
+  else { input.type='password'; btn.textContent='Show'; }
+}
+
+// ── SUBMIT ───────────────────────────────────────────────────
+async function submitRegistration(){
+  if(!validateForm()){
+    showToast('Please fix the highlighted fields.');
+    return;
+  }
+
+  const submitBtn=document.getElementById('submitBtn');
+  const originalBtnHTML=submitBtn.innerHTML;
+  submitBtn.disabled=true;
+  submitBtn.innerHTML='<i class="ti ti-loader-2" aria-hidden="true"></i> Creating account...';
+
+  const payload={
+    fullName: document.getElementById('fullName').value.trim(),
+    idNumber: document.getElementById('badgeId').value.trim(),
+    contactNumber: document.getElementById('contactNumber').value.trim(),
+    email: document.getElementById('email').value.trim(),
+    assignedPost: document.getElementById('assignedPost').value, // '' = not yet assigned
+    password: document.getElementById('password').value,
+  };
+
+  try{
+    const res=await fetch('/api/security/register',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(payload),
+    });
+    const result=await res.json().catch(()=>({}));
+
+    if(!res.ok){
+      showToast(result.error||'Something went wrong. Please try again.');
+      submitBtn.disabled=false;
+      submitBtn.innerHTML=originalBtnHTML;
+      return;
+    }
+
+    document.getElementById('stepForm').style.display='none';
+    document.getElementById('stepSuccess').style.display='block';
+    window.scrollTo({top:0,behavior:'smooth'});
+  }catch(err){
+    showToast('Could not reach the server. Please check your connection.');
+    submitBtn.disabled=false;
+    submitBtn.innerHTML=originalBtnHTML;
+  }
+}
+
+// ── TOAST ────────────────────────────────────────────────────
+function showToast(msg){
+  const t=document.getElementById('scanToast');
+  document.getElementById('toastMsg').textContent=msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+</script>
+</body>
+</html>

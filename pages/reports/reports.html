@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Reports</title>
+  <!-- plugins:css -->
+  <link rel="stylesheet" href="../../vendors/mdi/css/materialdesignicons.min.css">
+  <link rel="stylesheet" href="../../vendors/base/vendor.bundle.base.css">
+  <!-- endinject -->
+  <!-- inject:css -->
+  <link rel="stylesheet" href="../../css/style.css">
+  <!-- endinject -->
+  <link rel="shortcut icon" href="../../images/mini-logo.png" />
+</head>
+
+<body>
+  <div class="container-scroller">
+    <!-- partial:../../partials/_navbar.html -->
+    <nav class="navbar col-lg-12 col-12 p-0 fixed-top d-flex flex-row">
+            <div class="navbar-brand-wrapper d-flex justify-content-center">
+        <div class="navbar-brand-inner-wrapper d-flex justify-content-between align-items-center w-100">  
+          <a class="navbar-brand brand-logo" href="../../index.html"><img src="../../images/logo.png" alt="logo"/></a>
+          <a class="navbar-brand brand-logo-mini" href="../../index.html"><img src="../../images/mini-logo.jpg" alt="logo"/></a>
+          <button class="navbar-toggler navbar-toggler align-self-center" type="button" data-toggle="minimize">
+            <span class="mdi mdi-sort-variant"></span>
+          </button>
+        </div>  
+      </div>
+      <div class="navbar-menu-wrapper d-flex align-items-center justify-content-end">
+        <ul class="navbar-nav mr-lg-4 w-100">
+          <li class="nav-item nav-search d-none d-lg-block w-100">
+            <div class="input-group">
+              <div class="input-group-prepend">
+                <span class="input-group-text" id="search">
+                  <i class="mdi mdi-magnify"></i>
+                </span>
+              </div>
+              <input type="text" class="form-control" placeholder="Search now" aria-label="search" aria-describedby="search">
+            </div>
+          </li>
+        </ul>
+        <ul class="navbar-nav navbar-nav-right">
+          <li class="nav-item nav-profile dropdown">
+            <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown" id="profileDropdown">
+              <img src="../../images/faces/default-profile.jpg" alt="profile"/>
+            </a>
+            <div class="dropdown-menu dropdown-menu-right navbar-dropdown" aria-labelledby="profileDropdown">
+              <a class="dropdown-item">
+                <i class="mdi mdi-settings text-primary"></i>
+                Settings
+              </a>
+              <a class="dropdown-item">
+                <i class="mdi mdi-logout text-primary"></i>
+                Logout
+              </a>
+            </div>
+          </li>
+        </ul>
+        <button class="navbar-toggler navbar-toggler-right d-lg-none align-self-center" type="button" data-toggle="offcanvas">
+          <span class="mdi mdi-menu"></span>
+        </button>
+      </div>
+    </nav>
+    <!-- partial -->
+    <div class="container-fluid page-body-wrapper">
+      <!-- partial:../../partials/_sidebar.html -->
+      <nav class="sidebar sidebar-offcanvas" id="sidebar">
+        <ul class="nav">
+          <li class="nav-item">
+            <a class="nav-link" href="../../index.html">
+              <i class="mdi mdi-home menu-icon"></i>
+              <span class="menu-title">Dashboard</span>
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link" href="../../pages/user-management/users.html">
+              <i class="mdi mdi-account-multiple menu-icon"></i>
+              <span class="menu-title">User Management</span>
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link" href="../../motorcycle-management/motorcycle.html">
+              <i class="mdi mdi-motorbike menu-icon"></i>
+              <span class="menu-title">Motorcycle Management</span>
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link" href="../../pages/qrcode-management/qrcode.html">
+              <i class="mdi mdi-qrcode menu-icon"></i>
+              <span class="menu-title">QR Code Management
+              </span>
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link" href="../../pages/logs/logs.html">
+              <i class="mdi mdi-history menu-icon"></i>
+              <span class="menu-title">Entry and Exit Records</span>
+            </a>
+          </li>
+
+          <li class="nav-item active">
+            <a class="nav-link" href="../../pages/reports/reports.html">
+              <i class="mdi mdi-chart-line menu-icon"></i>
+              <span class="menu-title">Reports</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+      <!-- partial -->
+      <div class="main-panel">
+        <div class="content-wrapper">
+
+          <!-- Page header -->
+          <div class="row">
+            <div class="col-12">
+              <div class="d-flex align-items-center justify-content-between flex-wrap mb-3">
+                <div>
+                  <h3 class="font-weight-bold mb-0">Reports & Analytics</h3>
+                  <p class="text-muted mb-0">Campus motorcycle entry and exit activity overview</p>
+                </div>
+                <div class="d-flex align-items-center mt-2 mt-md-0">
+                  <select class="form-control mr-2" id="reportRangeSelect" style="width:auto;">
+                    <option value="7">Last 7 Days</option>
+                    <option value="30" selected>Last 30 Days</option>
+                    <option value="90">Last 90 Days</option>
+                  </select>
+                  <button class="btn btn-outline-primary" id="exportReportBtn" disabled>
+                    <i class="mdi mdi-download mr-1"></i><span id="exportBtnLabel">Export</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+
+          <!-- Row 1: Entries/Exits trend + Vehicles inside (area) -->
+          <div class="row">
+            <div class="col-lg-7 grid-margin stretch-card">
+              <div class="card">
+                <div class="card-body">
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h4 class="card-title mb-0">Entries vs Exits Over Time</h4>
+                    <div>
+                      <span class="badge badge-primary mr-1">&nbsp;</span><small class="text-muted mr-2">Entries</small>
+                      <span class="badge badge-danger mr-1">&nbsp;</span><small class="text-muted">Exits</small>
+                    </div>
+                  </div>
+                  <p class="text-muted small mb-3">Daily scan volume — spikes or imbalances may indicate gate congestion or unrecorded exits.</p>
+                  <canvas id="entriesExitsChart"></canvas>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-5 grid-margin stretch-card">
+              <div class="card">
+                <div class="card-body">
+                  <h4 class="card-title">Vehicles Inside Campus (Today)</h4>
+                  <p class="text-muted small mb-3">Running total of motorcycles currently on campus, hour by hour.</p>
+                  <canvas id="vehiclesInsideChart"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Row 2: Peak hours + Registration status -->
+          <div class="row">
+            <div class="col-lg-7 grid-margin stretch-card">
+              <div class="card">
+                <div class="card-body">
+                  <h4 class="card-title">Peak Hours Traffic</h4>
+                  <p class="text-muted small mb-3">Total scans (entry + exit) by hour, over the selected date range — use this to plan gate staffing.</p>
+                  <canvas id="peakHoursChart"></canvas>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-5 grid-margin stretch-card">
+              <div class="card">
+                <div class="card-body">
+                  <h4 class="card-title">Registration Status Breakdown</h4>
+                  <p class="text-muted small mb-3">Share of registered motorcycles by current status.</p>
+                  <canvas id="registrationStatusChart"></canvas>
+                  <div class="d-flex justify-content-around mt-3">
+                    <div class="text-center">
+                      <span class="mdi mdi-circle text-success"></span>
+                      <small class="d-block text-muted">Active</small>
+                      <strong id="regActiveCount">—</strong>
+                    </div>
+                    <div class="text-center">
+                      <span class="mdi mdi-circle text-warning"></span>
+                      <small class="d-block text-muted">Pending</small>
+                      <strong id="regPendingCount">—</strong>
+                    </div>
+                    <div class="text-center">
+                      <span class="mdi mdi-circle text-danger"></span>
+                      <small class="d-block text-muted">Flagged</small>
+                      <strong id="regFlaggedCount">—</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Row 3: Unverified/denied scans -->
+          <div class="row">
+            <div class="col-12 grid-margin stretch-card">
+              <div class="card">
+                <div class="card-body">
+                  <h4 class="card-title">Unverified / Denied Scan Attempts</h4>
+                  <p class="text-muted small mb-3">QR scans that failed verification — recurring spikes may signal lost cards, tampering, or unregistered vehicles attempting entry.</p>
+                  <canvas id="deniedScansChart" height="80"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <!-- content-wrapper ends -->
+        <!-- partial:../../partials/_footer.html -->
+
+        <footer class="footer">
+          <div class="d-sm-flex justify-content-center justify-content-sm-between">
+            <span class="text-muted text-center text-sm-left d-block d-sm-inline-block">Copyright © 2026 Malapag National High School. All rights reserved.</span>
+          </div>
+        </footer>
+
+        <!-- partial -->
+      </div>
+      <!-- main-panel ends -->
+    </div>
+    <!-- page-body-wrapper ends -->
+  </div>
+  <!-- container-scroller -->
+  <!-- plugins:js -->
+  <script src="../../vendors/base/vendor.bundle.base.js"></script>
+  <!-- endinject -->
+  <!-- Plugin js for this page-->
+  <script src="../../vendors/chart.js/Chart.min.js"></script>
+  <!-- End plugin js for this page-->
+  <!-- inject:js -->
+  <script src="../../js/off-canvas.js"></script>
+  <script src="../../js/hoverable-collapse.js"></script>
+  <script src="../../js/template.js"></script>
+  <!-- endinject -->
+  <!-- Custom js for this page-->
+  <script>
+    (function () {
+      const chartGreen = '#3dd598';
+      const chartBlue = '#4b7bec';
+      const chartRed = '#fc5c65';
+      const chartAmber = '#fbc531';
+      const gridColor = 'rgba(0,0,0,0.05)';
+
+      let entriesExitsChart, vehiclesInsideChart, peakHoursChart, registrationStatusChart, deniedScansChart;
+      let chartsInitialized = false;
+
+      // Keep the most recently loaded report payload + the range it covers,
+      // so the Export button can turn it into a CSV on demand.
+      let latestReportData = null;
+      let latestReportDays = null;
+
+      function updateStatusBoxes(rs) {
+        document.getElementById('regActiveCount').textContent = rs.active;
+        document.getElementById('regPendingCount').textContent = rs.pending;
+        document.getElementById('regFlaggedCount').textContent = rs.flagged;
+      }
+
+      function initCharts(data) {
+        entriesExitsChart = new Chart(document.getElementById('entriesExitsChart'), {
+          type: 'line',
+          data: {
+            labels: data.day_labels,
+            datasets: [
+              {
+                label: 'Entries',
+                data: data.daily_entries,
+                borderColor: chartBlue,
+                backgroundColor: 'rgba(75,123,236,0.08)',
+                tension: 0.35,
+                fill: true,
+                pointRadius: 3
+              },
+              {
+                label: 'Exits',
+                data: data.daily_exits,
+                borderColor: chartRed,
+                backgroundColor: 'rgba(252,92,101,0.06)',
+                tension: 0.35,
+                fill: true,
+                pointRadius: 3
+              }
+            ]
+          },
+          options: {
+            plugins: { legend: { display: false } },
+            scales: {
+              y: { beginAtZero: true, grid: { color: gridColor } },
+              x: { grid: { display: false } }
+            }
+          }
+        });
+
+        vehiclesInsideChart = new Chart(document.getElementById('vehiclesInsideChart'), {
+          type: 'line',
+          data: {
+            labels: data.inside_hour_labels,
+            datasets: [{
+              label: 'Vehicles Inside',
+              data: data.inside_counts,
+              borderColor: chartAmber,
+              backgroundColor: 'rgba(251,197,49,0.18)',
+              tension: 0.4,
+              fill: true,
+              pointRadius: 2
+            }]
+          },
+          options: {
+            plugins: { legend: { display: false } },
+            scales: {
+              y: { beginAtZero: true, grid: { color: gridColor } },
+              x: { grid: { display: false } }
+            }
+          }
+        });
+
+        peakHoursChart = new Chart(document.getElementById('peakHoursChart'), {
+          type: 'bar',
+          data: {
+            labels: data.hour_labels,
+            datasets: [{
+              label: 'Scans',
+              data: data.peak_hour_counts,
+              backgroundColor: chartBlue,
+              borderRadius: 4,
+              maxBarThickness: 28
+            }]
+          },
+          options: {
+            plugins: { legend: { display: false } },
+            scales: {
+              y: { beginAtZero: true, grid: { color: gridColor } },
+              x: { grid: { display: false } }
+            }
+          }
+        });
+
+        registrationStatusChart = new Chart(document.getElementById('registrationStatusChart'), {
+          type: 'doughnut',
+          data: {
+            labels: ['Active', 'Pending', 'Flagged'],
+            datasets: [{
+              data: [data.registration_status.active, data.registration_status.pending, data.registration_status.flagged],
+              backgroundColor: [chartGreen, chartAmber, chartRed],
+              borderWidth: 0
+            }]
+          },
+          options: {
+            cutout: '70%',
+            plugins: { legend: { display: false } }
+          }
+        });
+
+        deniedScansChart = new Chart(document.getElementById('deniedScansChart'), {
+          type: 'bar',
+          data: {
+            labels: data.day_labels,
+            datasets: [{
+              label: 'Denied Scans',
+              data: data.denied_counts,
+              backgroundColor: chartRed,
+              borderRadius: 4,
+              maxBarThickness: 36
+            }]
+          },
+          options: {
+            plugins: { legend: { display: false } },
+            scales: {
+              y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: gridColor } },
+              x: { grid: { display: false } }
+            }
+          }
+        });
+      }
+
+      function updateCharts(data) {
+        entriesExitsChart.data.labels = data.day_labels;
+        entriesExitsChart.data.datasets[0].data = data.daily_entries;
+        entriesExitsChart.data.datasets[1].data = data.daily_exits;
+        entriesExitsChart.update();
+
+        vehiclesInsideChart.data.labels = data.inside_hour_labels;
+        vehiclesInsideChart.data.datasets[0].data = data.inside_counts;
+        vehiclesInsideChart.update();
+
+        peakHoursChart.data.labels = data.hour_labels;
+        peakHoursChart.data.datasets[0].data = data.peak_hour_counts;
+        peakHoursChart.update();
+
+        registrationStatusChart.data.datasets[0].data = [
+          data.registration_status.active,
+          data.registration_status.pending,
+          data.registration_status.flagged
+        ];
+        registrationStatusChart.update();
+
+        deniedScansChart.data.labels = data.day_labels;
+        deniedScansChart.data.datasets[0].data = data.denied_counts;
+        deniedScansChart.update();
+      }
+
+      // ---- Export ----
+
+      function csvEscape(value) {
+        const s = String(value === undefined || value === null ? '' : value);
+        if (/[",\n]/.test(s)) {
+          return '"' + s.replace(/"/g, '""') + '"';
+        }
+        return s;
+      }
+
+      function rowsToCsv(rows) {
+        return rows.map(row => row.map(csvEscape).join(',')).join('\r\n');
+      }
+
+      // Builds one combined CSV covering every chart on the page, as a set
+      // of labeled sections (blank line between each) so it opens cleanly
+      // in Excel/Sheets while still being one file to download.
+      function buildReportCsv(data, days) {
+        const sections = [];
+        const generatedAt = new Date().toLocaleString();
+
+        sections.push(rowsToCsv([
+          ['Report', 'Campus Motorcycle Entry/Exit Report'],
+          ['Range', `Last ${days} Days`],
+          ['Generated', generatedAt]
+        ]));
+
+        const entriesExitsRows = [['Date', 'Entries', 'Exits']];
+        (data.day_labels || []).forEach((label, i) => {
+          entriesExitsRows.push([
+            label,
+            data.daily_entries ? data.daily_entries[i] : '',
+            data.daily_exits ? data.daily_exits[i] : ''
+          ]);
+        });
+        sections.push(rowsToCsv([['Entries vs Exits Over Time'], ...entriesExitsRows]));
+
+        const insideRows = [['Hour', 'Vehicles Inside']];
+        (data.inside_hour_labels || []).forEach((label, i) => {
+          insideRows.push([label, data.inside_counts ? data.inside_counts[i] : '']);
+        });
+        sections.push(rowsToCsv([['Vehicles Inside Campus (Today)'], ...insideRows]));
+
+        const peakRows = [['Hour', 'Total Scans']];
+        (data.hour_labels || []).forEach((label, i) => {
+          peakRows.push([label, data.peak_hour_counts ? data.peak_hour_counts[i] : '']);
+        });
+        sections.push(rowsToCsv([['Peak Hours Traffic'], ...peakRows]));
+
+        const rs = data.registration_status || {};
+        sections.push(rowsToCsv([
+          ['Registration Status Breakdown'],
+          ['Status', 'Count'],
+          ['Active', rs.active],
+          ['Pending', rs.pending],
+          ['Flagged', rs.flagged]
+        ]));
+
+        const deniedRows = [['Date', 'Denied Scans']];
+        (data.day_labels || []).forEach((label, i) => {
+          deniedRows.push([label, data.denied_counts ? data.denied_counts[i] : '']);
+        });
+        sections.push(rowsToCsv([['Unverified / Denied Scan Attempts'], ...deniedRows]));
+
+        return sections.join('\r\n\r\n');
+      }
+
+      function downloadCsv(csvContent, filename) {
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', filename);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      }
+
+      function handleExportClick() {
+        if (!latestReportData) return;
+
+        const exportBtn = document.getElementById('exportReportBtn');
+        const exportBtnLabel = document.getElementById('exportBtnLabel');
+        exportBtn.disabled = true;
+        exportBtnLabel.textContent = 'Exporting...';
+
+        try {
+          const csv = buildReportCsv(latestReportData, latestReportDays);
+          const today = new Date().toISOString().slice(0, 10);
+          downloadCsv(csv, `reports_last-${latestReportDays}-days_${today}.csv`);
+        } catch (err) {
+          console.error('Failed to export report:', err);
+          alert('Sorry, something went wrong exporting the report. Please try again.');
+        } finally {
+          exportBtn.disabled = false;
+          exportBtnLabel.textContent = 'Export';
+        }
+      }
+
+      async function loadReports(days) {
+        const exportBtn = document.getElementById('exportReportBtn');
+        try {
+          const res = await fetch(`/api/reports/summary?days=${encodeURIComponent(days)}`);
+          if (!res.ok) throw new Error(`Reports summary request failed (${res.status})`);
+          const data = await res.json();
+
+          if (!chartsInitialized) {
+            initCharts(data);
+            chartsInitialized = true;
+          } else {
+            updateCharts(data);
+          }
+          updateStatusBoxes(data.registration_status);
+
+          latestReportData = data;
+          latestReportDays = days;
+          exportBtn.disabled = false;
+        } catch (err) {
+          console.error('Failed to load /api/reports/summary:', err);
+          exportBtn.disabled = true;
+        }
+      }
+
+      document.addEventListener('DOMContentLoaded', function () {
+        const select = document.getElementById('reportRangeSelect');
+        loadReports(select.value);
+
+        select.addEventListener('change', function (e) {
+          loadReports(e.target.value);
+        });
+
+        document.getElementById('exportReportBtn').addEventListener('click', handleExportClick);
+      });
+    })();
+  </script>
+  <!-- End custom js for this page-->
+</body>
+
+</html>

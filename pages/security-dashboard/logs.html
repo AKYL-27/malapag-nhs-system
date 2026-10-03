@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Monitoring Logs — Moto Monitor</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css"/>
+<link rel="stylesheet" href="styles.css"/>
+  <link rel="shortcut icon" href="../../images/mini-logo.png" />
+
+</head>
+<body>
+<h1 class="sr-only">Real-time monitoring logs of all entry and exit activity</h1>
+
+<div class="overlay" id="overlay" onclick="closeMobileSidebar()"></div>
+<aside class="sidebar" id="sidebar"></aside>
+
+<main class="main" id="main">
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="mobile-menu-btn" onclick="openMobileSidebar()" aria-label="Open menu">
+        <i class="ti ti-menu-2" aria-hidden="true"></i>
+      </button>
+      <div class="topbar-titles">
+        <div class="page-title">Monitoring Logs</div>
+        <div class="breadcrumb" id="topbarDate"></div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="notif-btn" aria-label="Notifications">
+        <i class="ti ti-bell" style="font-size:17px;" aria-hidden="true"></i>
+        <span class="notif-dot"></span>
+      </div>
+      <div class="user-chip">
+        <div class="user-avatar" id="userAvatar">--</div>
+        <span class="user-name" id="userName">Guard</span>
+        <i class="ti ti-chevron-down" style="font-size:13px;color:var(--text-hint);" aria-hidden="true"></i>
+      </div>
+    </div>
+  </header>
+
+  <div class="content">
+    <section aria-labelledby="logs-heading">
+      <h2 id="logs-heading" class="sr-only">Monitoring Logs</h2>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
+        <span class="live-badge"><span class="live-dot"></span> Live Feed</span>
+        <span style="font-size:12px;color:var(--text-hint);">Auto-refreshes every 30s</span>
+      </div>
+      <div class="log-feed" id="logFeed">
+        <div style="text-align:center;color:var(--text-hint);padding:20px 0;">Loading recent activity…</div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<script src="sidebar.js"></script>
+<script src="app.js"></script>
+<script>renderSidebar('logs');</script>
+<script>
+// ── SIGNED-IN GUARD (saved by login.html) ────────────────────
+let guard = null;
+try { guard = JSON.parse(sessionStorage.getItem('guard')); } catch (_) {}
+
+if (!guard) {
+  // Not signed in — send back to login.
+  window.location.replace('login.html');
+} else {
+  const name = guard.fullName || 'Guard';
+  const parts = name.trim().split(/\s+/);
+  const initials = (parts[0][0] + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase();
+  document.getElementById('userAvatar').textContent = initials;
+  document.getElementById('userName').textContent = name;
+}
+
+
+  (function () {
+    const LOGS_API = '/api/security/logs?limit=20';
+    const REFRESH_MS = 30000;
+
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, c => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[c]));
+    }
+
+    function setTopbarDate() {
+      const el = document.getElementById('topbarDate');
+      if (!el) return;
+      el.textContent = new Date().toLocaleDateString(undefined, {
+        weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
+      });
+    }
+
+    function renderLogs(logs) {
+      const feed = document.getElementById('logFeed');
+      if (!logs || logs.length === 0) {
+        feed.innerHTML = '<div style="text-align:center;color:var(--text-hint);padding:20px 0;">No recent activity.</div>';
+        return;
+      }
+
+      feed.innerHTML = logs.map(log => {
+        const isEntry = log.type === 'entry';
+        const actionLabel = isEntry ? 'Entry recorded' : 'Exit recorded';
+        const dotClass = isEntry ? 'entry' : 'exit';
+        const vehicleBit = log.vehicle ? `${escapeHtml(log.vehicle)} · ` : '';
+        return `
+          <div class="log-item">
+            <span class="log-dot ${dotClass}"></span>
+            <div class="log-info">
+              <div class="log-title">${escapeHtml(log.owner)} — ${actionLabel}</div>
+              <div class="log-detail">
+                <span class="plate" style="font-size:11px;">${escapeHtml(log.plate)}</span>
+                ${vehicleBit}Scanned by ${escapeHtml(log.guard)}
+              </div>
+            </div>
+            <span class="log-time">${escapeHtml(log.time)}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function loadLogs() {
+      try {
+        const res = await fetch(LOGS_API);
+        if (!res.ok) throw new Error(`Request failed (${res.status})`);
+        const data = await res.json();
+        renderLogs(data.logs);
+      } catch (err) {
+        console.error('Failed to load /api/security/logs:', err);
+        const feed = document.getElementById('logFeed');
+        // Only replace the feed with an error state on the very first load —
+        // if it's a refresh mid-shift, leave the last-known-good feed up
+        // rather than blanking it out over a transient network hiccup.
+        if (feed.dataset.loaded !== 'true') {
+          feed.innerHTML = '<div style="text-align:center;color:var(--text-hint);padding:20px 0;">Could not load recent activity.</div>';
+        }
+        return;
+      }
+      document.getElementById('logFeed').dataset.loaded = 'true';
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      setTopbarDate();
+      loadLogs();
+      setInterval(loadLogs, REFRESH_MS);
+    });
+  })();
+</script>
+</body>
+</html>

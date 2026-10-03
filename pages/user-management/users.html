@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Users Management</title>
+  <link rel="stylesheet" href="../../vendors/mdi/css/materialdesignicons.min.css">
+  <link rel="stylesheet" href="../../vendors/base/vendor.bundle.base.css">
+  <link rel="stylesheet" href="../../css/style.css">
+  <link rel="shortcut icon" href="../../images/mini-logo.png" />
+  <style>
+    /* ── Toolbar ── */
+    .users-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+    .users-toolbar .search-box {
+      position: relative;
+      flex: 1;
+      min-width: 180px;
+      max-width: 320px;
+    }
+    .users-toolbar .search-box i {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #aaa;
+      font-size: 16px;
+    }
+    .users-toolbar .search-box input {
+      width: 100%;
+      padding: 8px 12px 8px 34px;
+      border: 1px solid #dee2e6;
+      border-radius: 6px;
+      font-size: 13px;
+      outline: none;
+      transition: border-color .2s;
+    }
+    .users-toolbar .search-box input:focus { border-color: #4B49AC; }
+    .users-toolbar select {
+      padding: 8px 12px;
+      border: 1px solid #dee2e6;
+      border-radius: 6px;
+      font-size: 13px;
+      background: #fff;
+      outline: none;
+    }
+
+    .filter-tabs {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+    .filter-tabs .filter-btn {
+      padding: 7px 16px;
+      border: 1px solid #dee2e6;
+      border-radius: 6px;
+      background: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      color: #6c757d;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .filter-tabs .filter-btn.active,
+    .filter-tabs .filter-btn:hover {
+      background: #4B49AC;
+      color: #fff;
+      border-color: #4B49AC;
+    }
+
+    .pending-banner {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      background: #fff4e0;
+      color: #b9700f;
+      border: 1px solid #fbe0b0;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+    .pending-banner.show { display: flex; }
+    .pending-banner a { color: #b9700f; text-decoration: underline; cursor: pointer; margin-left: auto; }
+
+    /* ── Table ── */
+    .table thead th {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      color: #6c757d;
+      border-bottom: 2px solid #e9ecef;
+    }
+    .badge-role {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .03em;
+    }
+    .badge-student  { background: #fde8e8; color: #c0392b; }
+    .badge-staff    { background: #e8f4fd; color: #2980b9; }
+    .badge-security { background: #ece8fd; color: #4B49AC; }
+
+    .badge-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .badge-approved { background: #e8faf0; color: #27ae60; }
+    .badge-pending  { background: #fff4e0; color: #e67e22; }
+    .badge-declined { background: #fde8e8; color: #c0392b; }
+    .badge-status::before {
+      content: '';
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+      display: inline-block;
+    }
+
+    .action-btn {
+      background: none;
+      border: none;
+      padding: 5px 7px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      line-height: 1;
+      transition: background .15s;
+    }
+    .action-btn:hover { background: #f0f0f0; }
+    .action-btn.view    { color: #4B49AC; }
+    .action-btn.approve { color: #27ae60; }
+    .action-btn.decline { color: #e67e22; }
+    .action-btn.del     { color: #e74c3c; }
+
+    .no-results {
+      text-align: center;
+      padding: 40px 0;
+      color: #aaa;
+      font-size: 14px;
+      display: none;
+    }
+    .no-results i { font-size: 36px; display: block; margin-bottom: 8px; }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.45);
+      z-index: 1050;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-overlay.open { display: flex; }
+
+    .modal-box {
+      background: #fff;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 500px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.18);
+      overflow: hidden;
+      animation: slideUp .25s ease;
+    }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid #e9ecef;
+    }
+    .modal-header h5 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 700;
+      color: #2c2c54;
+    }
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 20px;
+      color: #aaa;
+      cursor: pointer;
+      line-height: 1;
+      padding: 0 4px;
+    }
+    .modal-close:hover { color: #333; }
+
+    .modal-body { padding: 22px 24px; }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      padding: 14px 24px 20px;
+      flex-wrap: wrap;
+    }
+    .btn-cancel {
+      padding: 9px 20px;
+      border: 1px solid #dee2e6;
+      border-radius: 7px;
+      background: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      color: #6c757d;
+      cursor: pointer;
+    }
+    .btn-cancel:hover { background: #f5f5f5; }
+    .btn-save {
+      padding: 9px 22px;
+      border: none;
+      border-radius: 7px;
+      background: #4B49AC;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .btn-save:hover { background: #3c3a8e; }
+    .btn-save:disabled { opacity: .6; cursor: default; }
+
+    /* ── View Modal ── */
+    .view-field { margin-bottom: 14px; }
+    .view-field .vf-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      color: #aaa;
+      margin-bottom: 2px;
+    }
+    .view-field .vf-value {
+      font-size: 14px;
+      color: #2c2c54;
+      font-weight: 500;
+      word-break: break-word;
+    }
+    .view-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0 24px;
+    }
+
+    /* ── Toast ── */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 2000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .toast {
+      background: #2c2c54;
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      box-shadow: 0 6px 20px rgba(0,0,0,.2);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      animation: fadeInUp .3s ease;
+    }
+    .toast.success { background: #27ae60; }
+    .toast.error   { background: #e74c3c; }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Delete confirm ── */
+    .delete-confirm-text { font-size: 14px; color: #555; margin: 0; }
+    .delete-confirm-text strong { color: #2c2c54; }
+  </style>
+</head>
+
+<body>
+  <div class="container-scroller">
+    <!-- NAVBAR -->
+    <nav class="navbar col-lg-12 col-12 p-0 fixed-top d-flex flex-row">
+      <div class="navbar-brand-wrapper d-flex justify-content-center">
+        <div class="navbar-brand-inner-wrapper d-flex justify-content-between align-items-center w-100">
+          <a class="navbar-brand brand-logo" href="../../index.html"><img src="../../images/logo.png" alt="logo"/></a>
+          <a class="navbar-brand brand-logo-mini" href="../../index.html"><img src="../../images/mini-logo.jpg" alt="logo"/></a>
+          <button class="navbar-toggler navbar-toggler align-self-center" type="button" data-toggle="minimize">
+            <span class="mdi mdi-sort-variant"></span>
+          </button>
+        </div>
+      </div>
+      <div class="navbar-menu-wrapper d-flex align-items-center justify-content-end">
+        <ul class="navbar-nav mr-lg-4 w-100">
+          <li class="nav-item nav-search d-none d-lg-block w-100">
+            <div class="input-group">
+              <div class="input-group-prepend">
+                <span class="input-group-text" id="search"><i class="mdi mdi-magnify"></i></span>
+              </div>
+              <input type="text" class="form-control" placeholder="Search now" aria-label="search" aria-describedby="search">
+            </div>
+          </li>
+        </ul>
+        <ul class="navbar-nav navbar-nav-right">
+          <li class="nav-item nav-profile dropdown">
+            <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown" id="profileDropdown">
+              <img src="../../images/faces/default-profile.jpg" alt="profile"/>
+            </a>
+            <div class="dropdown-menu dropdown-menu-right navbar-dropdown" aria-labelledby="profileDropdown">
+              <a class="dropdown-item"><i class="mdi mdi-settings text-primary"></i> Settings</a>
+              <a class="dropdown-item"><i class="mdi mdi-logout text-primary"></i> Logout</a>
+            </div>
+          </li>
+        </ul>
+        <button class="navbar-toggler navbar-toggler-right d-lg-none align-self-center" type="button" data-toggle="offcanvas">
+          <span class="mdi mdi-menu"></span>
+        </button>
+      </div>
+    </nav>
+
+    <div class="container-fluid page-body-wrapper">
+      <!-- SIDEBAR -->
+      <nav class="sidebar sidebar-offcanvas" id="sidebar">
+        <ul class="nav">
+          <li class="nav-item">
+            <a class="nav-link" href="../../index.html">
+              <i class="mdi mdi-home menu-icon"></i><span class="menu-title">Dashboard</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="../../pages/user-management/users.html">
+              <i class="mdi mdi-account-multiple menu-icon"></i><span class="menu-title">User Management</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="../../pages/motorcycle-management/motorcycle.html">
+              <i class="mdi mdi-motorbike menu-icon"></i><span class="menu-title">Motorcycle Management</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="../../pages/qrcode-management/qrcode.html">
+              <i class="mdi mdi-qrcode menu-icon"></i><span class="menu-title">QR Code Management</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="../../pages/logs/logs.html">
+              <i class="mdi mdi-history menu-icon"></i><span class="menu-title">Entry and Exit Records</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="../../pages/reports/reports.html">
+              <i class="mdi mdi-chart-line menu-icon"></i><span class="menu-title">Reports</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+
+      <!-- MAIN -->
+      <div class="main-panel">
+        <div class="content-wrapper">
+          <div class="row">
+            <div class="col-lg-12 grid-margin stretch-card">
+              <div class="card">
+                <div class="card-body">
+                  <h4 class="card-title mb-1">Users Management</h4>
+                  <p class="card-description mb-3">Review registrations and manage student, staff and security accounts.</p>
+
+                  <div class="pending-banner" id="pendingBanner">
+                    <i class="mdi mdi-clock-alert-outline"></i>
+                    <span id="pendingBannerText"></span>
+                    <a id="pendingBannerLink">Show pending</a>
+                  </div>
+
+                  <!-- Toolbar -->
+                  <div class="users-toolbar">
+                    <div class="search-box">
+                      <i class="mdi mdi-magnify"></i>
+                      <input type="text" id="searchInput" placeholder="Search by name, ID or email…">
+                    </div>
+                    <div class="filter-tabs" id="roleTabs">
+                      <button class="filter-btn active" data-filter="all">All</button>
+                      <button class="filter-btn" data-filter="student">Students</button>
+                      <button class="filter-btn" data-filter="staff">Staff</button>
+                      <button class="filter-btn" data-filter="security">Security</button>
+                    </div>
+                    <select id="statusFilter" aria-label="Filter by status">
+                      <option value="all">All statuses</option>
+                      <option value="Pending">Pending</option>
+                      <option value="Approved">Approved</option>
+                      <option value="Declined">Declined</option>
+                    </select>
+                  </div>
+
+                  <!-- Table -->
+                  <div class="table-responsive">
+                    <table class="table table-hover" id="usersTable">
+                      <thead>
+                        <tr>
+                          <th>#</th>
+                          <th>Name</th>
+                          <th>Role</th>
+                          <th>ID Number</th>
+                          <th>Contact</th>
+                          <th>Registered</th>
+                          <th>Status</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody id="usersTableBody">
+                        <tr><td colspan="8" style="text-align:center;color:#aaa;padding:30px 0;">Loading…</td></tr>
+                      </tbody>
+                    </table>
+                    <div class="no-results" id="noResults">
+                      <i class="mdi mdi-account-search"></i>
+                      No users match your search.
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <footer class="footer">
+          <div class="d-sm-flex justify-content-center justify-content-sm-between">
+            <span class="text-muted text-center text-sm-left d-block d-sm-inline-block">Copyright © 2026 Malapag National High School. All rights reserved.</span>
+          </div>
+        </footer>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       VIEW USER MODAL
+  ══════════════════════════════════════ -->
+  <div class="modal-overlay" id="viewModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h5>User Details</h5>
+        <button class="modal-close" data-close="viewModal">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="view-grid" id="viewGrid"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" data-close="viewModal">Close</button>
+        <button class="btn-save" id="viewDecline" style="background:#e67e22">Decline</button>
+        <button class="btn-save" id="viewApprove" style="background:#27ae60">Approve</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       DELETE CONFIRM MODAL
+  ══════════════════════════════════════ -->
+  <div class="modal-overlay" id="deleteModal">
+    <div class="modal-box" style="max-width:400px">
+      <div class="modal-header">
+        <h5>Delete User</h5>
+        <button class="modal-close" data-close="deleteModal">×</button>
+      </div>
+      <div class="modal-body">
+        <p class="delete-confirm-text">Are you sure you want to delete <strong id="deleteUserName"></strong>? Their registered motorcycles will also be removed. This action cannot be undone.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" data-close="deleteModal">Cancel</button>
+        <button class="btn-save" id="confirmDeleteBtn" style="background:#e74c3c">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="../../vendors/base/vendor.bundle.base.js"></script>
+  <script src="../../js/off-canvas.js"></script>
+  <script src="../../js/hoverable-collapse.js"></script>
+  <script src="../../js/template.js"></script>
+
+  <script>
+  (function () {
+    'use strict';
+
+    // ── State ─────────────────────────────────────────────────────────────────
+    let accounts = [];          // everything from /api/admin/users
+    let activeRole = 'all';
+    let viewing = null;         // account open in the view modal
+    let deleting = null;        // account waiting for delete confirmation
+
+    const ROLE_LABEL = { student: 'Student', staff: 'Staff', security: 'Security' };
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+    function esc(str) {
+      return String(str == null ? '' : str).replace(/[&<>"']/g, c => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[c]));
+    }
+
+    function fmtDate(iso) {
+      if (!iso) return '—';
+      const d = new Date(iso);
+      return isNaN(d) ? '—' : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    function statusClass(s) {
+      return s === 'Approved' ? 'badge-approved' : s === 'Declined' ? 'badge-declined' : 'badge-pending';
+    }
+
+    function showToast(msg, type) {
+      type = type || 'success';
+      const tc = document.getElementById('toastContainer');
+      const el = document.createElement('div');
+      el.className = 'toast ' + type;
+      const icon = document.createElement('i');
+      icon.className = 'mdi ' + (type === 'success' ? 'mdi-check-circle' : 'mdi-alert-circle');
+      el.appendChild(icon);
+      el.appendChild(document.createTextNode(' ' + msg));
+      tc.appendChild(el);
+      setTimeout(() => el.remove(), 3500);
+    }
+
+    function openModal(id)  { document.getElementById(id).classList.add('open'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+    async function api(url, options) {
+      const res = await fetch(url, options);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Something went wrong. Please try again.');
+      return data;
+    }
+
+    // ── Load ──────────────────────────────────────────────────────────────────
+    async function loadAccounts() {
+      try {
+        accounts = await api('/api/admin/users');
+        renderTable();
+      } catch (err) {
+        document.getElementById('usersTableBody').innerHTML =
+          '<tr><td colspan="8" style="text-align:center;color:#e74c3c;padding:30px 0;">Could not load users. ' + esc(err.message) + '</td></tr>';
+      }
+    }
+
+    // ── Render ────────────────────────────────────────────────────────────────
+    function renderBanner() {
+      const pending = accounts.filter(a => a.approval_status === 'Pending').length;
+      const banner = document.getElementById('pendingBanner');
+      if (pending > 0) {
+        document.getElementById('pendingBannerText').textContent =
+          pending + (pending === 1 ? ' registration is' : ' registrations are') + ' waiting for your review.';
+        banner.classList.add('show');
+      } else {
+        banner.classList.remove('show');
+      }
+    }
+
+    function renderTable() {
+      renderBanner();
+
+      const q = document.getElementById('searchInput').value.trim().toLowerCase();
+      const statusFilter = document.getElementById('statusFilter').value;
+      const tbody = document.getElementById('usersTableBody');
+      const noRes = document.getElementById('noResults');
+
+      const filtered = accounts.filter(a => {
+        const okRole = activeRole === 'all' || a.role === activeRole;
+        const okStatus = statusFilter === 'all' || a.approval_status === statusFilter;
+        const okSearch = !q ||
+          a.fullName.toLowerCase().includes(q) ||
+          a.idNumber.toLowerCase().includes(q) ||
+          a.email.toLowerCase().includes(q);
+        return okRole && okStatus && okSearch;
+      });
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = '';
+        noRes.style.display = 'block';
+        return;
+      }
+      noRes.style.display = 'none';
+
+      tbody.innerHTML = filtered.map((a, i) => {
+        const attrs = 'data-kind="' + esc(a.kind) + '" data-id="' + esc(a.id) + '"';
+        const canApprove = a.approval_status !== 'Approved';
+        const canDecline = a.approval_status !== 'Declined';
+        return `
+        <tr>
+          <td>${i + 1}</td>
+          <td style="font-weight:600;color:#2c2c54">${esc(a.fullName)}</td>
+          <td><span class="badge-role badge-${esc(a.role)}">${esc(ROLE_LABEL[a.role] || a.role)}</span></td>
+          <td>${esc(a.idNumber)}</td>
+          <td>${esc(a.contactNumber)}</td>
+          <td>${fmtDate(a.created_at)}</td>
+          <td><span class="badge-status ${statusClass(a.approval_status)}">${esc(a.approval_status)}</span></td>
+          <td style="white-space:nowrap;">
+            <button class="action-btn view" title="View" data-action="view" ${attrs}><i class="mdi mdi-eye"></i></button>
+            ${canApprove ? `<button class="action-btn approve" title="Approve" data-action="approve" ${attrs}><i class="mdi mdi-check-circle-outline"></i></button>` : ''}
+            ${canDecline ? `<button class="action-btn decline" title="Decline" data-action="decline" ${attrs}><i class="mdi mdi-close-circle-outline"></i></button>` : ''}
+            <button class="action-btn del" title="Delete" data-action="delete" ${attrs}><i class="mdi mdi-trash-can-outline"></i></button>
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    function findAccount(kind, id) {
+      return accounts.find(a => a.kind === kind && a.id === id);
+    }
+
+    // ── Approve / decline ─────────────────────────────────────────────────────
+    async function setApproval(account, status) {
+      if (status === 'Declined' &&
+          !window.confirm('Decline the registration of ' + account.fullName + '? They will not be able to sign in.')) {
+        return;
+      }
+      try {
+        const result = await api(
+          '/api/admin/users/' + encodeURIComponent(account.kind) + '/' + encodeURIComponent(account.id) + '/approval',
+          { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status }) }
+        );
+        const i = accounts.findIndex(a => a.kind === account.kind && a.id === account.id);
+        if (i !== -1) accounts[i] = result.account;
+
+        let msg = account.fullName + (status === 'Approved' ? ' approved.' : ' declined.');
+        if (result.motorcycles_approved) {
+          msg += ' ' + result.motorcycles_approved + (result.motorcycles_approved === 1 ? ' motorcycle' : ' motorcycles') + ' also approved.';
+        }
+        showToast(msg, 'success');
+        closeModal('viewModal');
+        renderTable();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    // ── View ──────────────────────────────────────────────────────────────────
+    function field(label, value, full) {
+      return '<div class="view-field"' + (full ? ' style="grid-column:1/-1"' : '') + '>' +
+        '<div class="vf-label">' + esc(label) + '</div>' +
+        '<div class="vf-value">' + (esc(value) || '—') + '</div></div>';
+    }
+
+    function viewAccount(a) {
+      viewing = a;
+      let html = field('Full Name', a.fullName) +
+                 field('Role', ROLE_LABEL[a.role] || a.role) +
+                 field(a.role === 'student' ? 'Student ID' : 'Badge / Employee ID', a.idNumber) +
+                 field('Contact', a.contactNumber) +
+                 field('Email', a.email, true);
+      if (a.role === 'security') {
+        html += field('Assigned Post', a.assignedPost || 'Not yet assigned', true);
+      } else {
+        html += field('Department / Course', a.department);
+        if (a.role === 'student') html += field('Year Level', a.yearLevel);
+      }
+      html += field('Registered', fmtDate(a.created_at)) + field('Status', a.approval_status);
+      document.getElementById('viewGrid').innerHTML = html;
+
+      document.getElementById('viewApprove').style.display = a.approval_status === 'Approved' ? 'none' : '';
+      document.getElementById('viewDecline').style.display = a.approval_status === 'Declined' ? 'none' : '';
+      openModal('viewModal');
+    }
+
+    // ── Delete ────────────────────────────────────────────────────────────────
+    function askDelete(a) {
+      deleting = a;
+      document.getElementById('deleteUserName').textContent = a.fullName;
+      openModal('deleteModal');
+    }
+
+    async function confirmDelete() {
+      if (!deleting) return;
+      const btn = document.getElementById('confirmDeleteBtn');
+      btn.disabled = true;
+      try {
+        await api('/api/admin/users/' + encodeURIComponent(deleting.kind) + '/' + encodeURIComponent(deleting.id), { method: 'DELETE' });
+        accounts = accounts.filter(a => !(a.kind === deleting.kind && a.id === deleting.id));
+        closeModal('deleteModal');
+        renderTable();
+        showToast('User deleted.', 'success');
+      } catch (err) {
+        showToast(err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        deleting = null;
+      }
+    }
+
+    // ── Events ────────────────────────────────────────────────────────────────
+    document.getElementById('usersTableBody').addEventListener('click', e => {
+      const btn = e.target.closest('button[data-action]');
+      if (!btn) return;
+      const account = findAccount(btn.dataset.kind, btn.dataset.id);
+      if (!account) return;
+      const action = btn.dataset.action;
+      if (action === 'view') viewAccount(account);
+      else if (action === 'approve') setApproval(account, 'Approved');
+      else if (action === 'decline') setApproval(account, 'Declined');
+      else if (action === 'delete') askDelete(account);
+    });
+
+    document.getElementById('searchInput').addEventListener('input', renderTable);
+    document.getElementById('statusFilter').addEventListener('change', renderTable);
+
+    document.getElementById('roleTabs').addEventListener('click', e => {
+      const btn = e.target.closest('.filter-btn');
+      if (!btn) return;
+      activeRole = btn.dataset.filter;
+      document.querySelectorAll('#roleTabs .filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderTable();
+    });
+
+    document.getElementById('pendingBannerLink').addEventListener('click', () => {
+      document.getElementById('statusFilter').value = 'Pending';
+      renderTable();
+    });
+
+    document.getElementById('viewApprove').addEventListener('click', () => viewing && setApproval(viewing, 'Approved'));
+    document.getElementById('viewDecline').addEventListener('click', () => viewing && setApproval(viewing, 'Declined'));
+    document.getElementById('confirmDeleteBtn').addEventListener('click', confirmDelete);
+
+    document.querySelectorAll('[data-close]').forEach(btn => {
+      btn.addEventListener('click', () => closeModal(btn.dataset.close));
+    });
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+      overlay.addEventListener('click', e => {
+        if (e.target === overlay) overlay.classList.remove('open');
+      });
+    });
+
+    // ── Init ──────────────────────────────────────────────────────────────────
+    loadAccounts();
+  })();
+  </script>
+</body>
+</html>

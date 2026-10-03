@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>My Motorcycle — Moto Monitor</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css"/>
+<link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+<h1 class="sr-only">My Motorcycle information page</h1>
+
+<div class="overlay" id="overlay" onclick="closeMobileSidebar()"></div>
+<aside class="sidebar" id="sidebar"></aside>
+
+<main class="main" id="main">
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="mobile-menu-btn" onclick="openMobileSidebar()" aria-label="Open menu">
+        <i class="ti ti-menu-2" aria-hidden="true"></i>
+      </button>
+      <div class="topbar-titles">
+        <div class="page-title">My Motorcycle</div>
+        <div class="breadcrumb" id="topbarDate"></div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="notif-btn" aria-label="Notifications">
+        <i class="ti ti-bell" style="font-size:18px;" aria-hidden="true"></i>
+        <span class="notif-dot"></span>
+      </div>
+      <div class="user-chip">
+        <div class="user-avatar">MS</div>
+        <span class="user-name">Maria Santos</span>
+        <i class="ti ti-chevron-down" style="font-size:13px;color:var(--text-hint);" aria-hidden="true"></i>
+      </div>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <div class="moto-hero">
+      <div class="moto-hero-icon"><i class="ti ti-motorbike" aria-hidden="true"></i></div>
+      <div>
+        <div class="moto-hero-title">Honda Click 125i</div>
+        <div class="moto-hero-sub">Registered motorcycle on file · Plate ABC-1234</div>
+      </div>
+      <span class="status-pill status-active" style="margin-left:auto;"><i class="ti ti-circle-check" style="font-size:12px;" aria-hidden="true"></i> Registration Active</span>
+    </div>
+
+    <div class="card" style="margin-bottom:20px;">
+      <div class="card-header-flex">
+        <div class="card-title"><i class="ti ti-file-text" aria-hidden="true"></i> Motorcycle Information</div>
+      </div>
+      <div class="detail-grid">
+        <div class="detail-item">
+          <div class="detail-label">Owner Name</div>
+          <div class="detail-value">Maria Santos</div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-label">Plate Number</div>
+          <div class="detail-value"><span class="plate">ABC-1234</span></div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-label">Motorcycle Brand</div>
+          <div class="detail-value">Honda</div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-label">Model</div>
+          <div class="detail-value">Click 125i</div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-label">Color</div>
+          <div class="detail-value">Matte Black</div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-label">Registration Status</div>
+          <div class="detail-value"><span class="status-pill status-active">Active</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary"><i class="ti ti-edit" aria-hidden="true"></i> Edit Information</button>
+      <button class="btn btn-secondary"><i class="ti ti-refresh" aria-hidden="true"></i> Update Details</button>
+    </div>
+
+  </div>
+</main>
+
+<script src="sidebar.js"></script>
+<script src="app.js"></script>
+<script>renderSidebar('motorcycle');</script>
+</body>
+</html>

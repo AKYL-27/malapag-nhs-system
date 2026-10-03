@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Entry Records — Moto Monitor</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css"/>
+<link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+<h1 class="sr-only">Entry Records of motorcycles that entered the campus</h1>
+
+<div class="overlay" id="overlay" onclick="closeMobileSidebar()"></div>
+<aside class="sidebar" id="sidebar"></aside>
+
+<main class="main" id="main">
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="mobile-menu-btn" onclick="openMobileSidebar()" aria-label="Open menu">
+        <i class="ti ti-menu-2" aria-hidden="true"></i>
+      </button>
+      <div class="topbar-titles">
+        <div class="page-title">Entry Records</div>
+        <div class="breadcrumb" id="topbarDate"></div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="notif-btn" aria-label="Notifications">
+        <i class="ti ti-bell" style="font-size:17px;" aria-hidden="true"></i>
+        <span class="notif-dot"></span>
+      </div>
+      <div class="user-chip">
+        <div class="user-avatar">JR</div>
+        <span class="user-name">J. Reyes</span>
+        <i class="ti ti-chevron-down" style="font-size:13px;color:var(--text-hint);" aria-hidden="true"></i>
+      </div>
+    </div>
+  </header>
+
+  <div class="content">
+    <section aria-labelledby="entry-heading">
+      <h2 id="entry-heading" class="sr-only">Entry Records</h2>
+      <div class="filter-row">
+        <input type="text" placeholder="Search owner or plate..." id="entrySearch" oninput="filterTable('entryTbody','entrySearch')"/>
+        <input type="date" id="entryDate"/>
+        <select><option>All Entries</option><option>Morning</option><option>Afternoon</option></select>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>#</th><th>Owner</th><th>Plate Number</th><th>Motorcycle</th><th>Time In</th><th>Status</th></tr></thead>
+            <tbody id="entryTbody">
+              <tr><td style="color:var(--text-hint)">47</td><td>Maria Santos</td><td><span class="plate">ABC-1234</span></td><td>Honda Click 125i</td><td>3:42 PM</td><td><span class="badge badge-entry">Entry</span></td></tr>
+              <tr><td style="color:var(--text-hint)">46</td><td>Ana Reyes</td><td><span class="plate">DEF-9012</span></td><td>Yamaha Mio i 125</td><td>3:25 PM</td><td><span class="badge badge-entry">Entry</span></td></tr>
+              <tr><td style="color:var(--text-hint)">45</td><td>Rosa Mendoza</td><td><span class="plate">JKL-7890</span></td><td>Honda Beat 125</td><td>3:07 PM</td><td><span class="badge badge-entry">Entry</span></td></tr>
+              <tr><td style="color:var(--text-hint)">44</td><td>Pedro Gomez</td><td><span class="plate">MNO-2345</span></td><td>Suzuki Skydrive 125</td><td>2:51 PM</td><td><span class="badge badge-entry">Entry</span></td></tr>
+              <tr><td style="color:var(--text-hint)">43</td><td>Elena Cruz</td><td><span class="plate">PQR-6789</span></td><td>Yamaha Aerox 155</td><td>2:38 PM</td><td><span class="badge badge-entry">Entry</span></td></tr>
+              <tr><td style="color:var(--text-hint)">42</td><td>Marco Tan</td><td><span class="plate">STU-0123</span></td><td>Honda ADV 150</td><td>2:20 PM</td><td><span class="badge badge-entry">Entry</span></td></tr>
+              <tr><td style="color:var(--text-hint)">41</td><td>Liza Villanueva</td><td><span class="plate">VWX-4567</span></td><td>Kymco Like 125</td><td>1:58 PM</td><td><span class="badge badge-entry">Entry</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="pagination">
+        <span>Showing 7 of 47 entries</span>
+        <div class="pg-btns">
+          <button class="pg-btn">← Prev</button>
+          <button class="pg-btn active">1</button>
+          <button class="pg-btn">2</button>
+          <button class="pg-btn">Next →</button>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<script src="sidebar.js"></script>
+<script src="app.js"></script>
+<script>renderSidebar('entry');</script>
+</body>
+</html>

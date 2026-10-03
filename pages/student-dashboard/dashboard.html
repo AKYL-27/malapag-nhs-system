@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Dashboard — Moto Monitor</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css"/>
+<link rel="stylesheet" href="styles.css"/>
+  <link rel="shortcut icon" href="../../images/mini-logo.png" />
+
+</head>
+<body>
+<h1 class="sr-only">Student and Staff Dashboard — Motorcycle Monitoring System</h1>
+
+<div class="overlay" id="overlay" onclick="closeMobileSidebar()"></div>
+<aside class="sidebar" id="sidebar"></aside>
+
+<main class="main" id="main">
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="mobile-menu-btn" onclick="openMobileSidebar()" aria-label="Open menu">
+        <i class="ti ti-menu-2" aria-hidden="true"></i>
+      </button>
+      <div class="topbar-titles">
+        <div class="page-title">Dashboard</div>
+        <div class="breadcrumb" id="topbarDate"></div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="notif-btn" aria-label="Notifications">
+        <i class="ti ti-bell" style="font-size:18px;" aria-hidden="true"></i>
+        <span class="notif-dot"></span>
+      </div>
+      <button class="notif-btn" id="logoutBtn" aria-label="Sign out" onclick="logout()" style="border:none;cursor:pointer;background:transparent;">
+        <i class="ti ti-logout" style="font-size:18px;" aria-hidden="true"></i>
+      </button>
+      <div class="user-chip">
+        <div class="user-avatar" id="userAvatar">--</div>
+        <span class="user-name" id="userNameChip">Loading...</span>
+        <i class="ti ti-chevron-down" style="font-size:13px;color:var(--text-hint);" aria-hidden="true"></i>
+      </div>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <div class="welcome-banner">
+      <div>
+        <h2 id="welcomeHeading">Welcome back! 👋</h2>
+        <p>Here's a quick look at your campus motorcycle activity today.</p>
+      </div>
+      <div class="welcome-icon"><i class="ti ti-motorbike" aria-hidden="true"></i></div>
+    </div>
+
+    <div class="cards-row">
+      <!-- Profile Summary -->
+      <div class="card">
+        <div class="card-header-flex">
+          <div class="card-title"><i class="ti ti-id-badge" aria-hidden="true"></i> Profile Summary</div>
+        </div>
+        <div class="profile-summary">
+          <div class="profile-summary-avatar" id="profileAvatar">--</div>
+          <div>
+            <div class="profile-summary-name" id="profileName">Loading...</div>
+            <div class="profile-summary-meta" id="profileMeta">User ID: —</div>
+            <span class="role-badge" id="roleBadge"><i class="ti ti-school" style="font-size:13px;" aria-hidden="true"></i> —</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Motorcycle Status -->
+      <div class="card">
+        <div class="card-header-flex">
+          <div class="card-title"><i class="ti ti-motorbike" aria-hidden="true"></i> Motorcycle Status</div>
+          <span class="status-pill" id="motoStatusPill"><i class="ti ti-circle-check" style="font-size:12px;" aria-hidden="true"></i> —</span>
+        </div>
+        <div class="moto-info-row">
+          <span class="moto-label">Registered Motorcycle</span>
+          <span class="moto-value" id="motoValue">—</span>
+        </div>
+        <div class="moto-info-row">
+          <span class="moto-label">Plate Number</span>
+          <span class="plate" id="motoPlate">—</span>
+        </div>
+        <div class="moto-info-row">
+          <span class="moto-label">QR Code Status</span>
+          <span class="status-pill" id="qrStatusPill">—</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-header">
+      <span class="section-title">Recent Activity</span>
+      <a class="section-link" href="history.html">View full history →</a>
+    </div>
+    <div class="card" style="margin-bottom:20px;">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Date</th><th>Time</th><th>Activity</th><th>Status</th></tr></thead>
+          <tbody id="activityTableBody">
+            <tr><td colspan="4" style="text-align:center;color:var(--text-hint);padding:20px 0;">Loading recent activity…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn btn-primary" href="my-qrcode.html"><i class="ti ti-qrcode" aria-hidden="true"></i> View My QR Code</a>
+      <a class="btn btn-secondary" href="my-motorcycle.html"><i class="ti ti-motorbike" aria-hidden="true"></i> My Motorcycle Info</a>
+    </div>
+
+  </div>
+</main>
+
+<script src="sidebar.js"></script>
+<script src="app.js"></script>
+<script>renderSidebar('dashboard');</script>
+
+<script>
+function getInitials(name){
+  if(!name) return '--';
+  const parts=name.trim().split(/\s+/);
+  const first=parts[0]?.[0]||'';
+  const last=parts.length>1?parts[parts.length-1][0]:'';
+  return (first+last).toUpperCase() || '--';
+}
+
+function logout(){
+  sessionStorage.removeItem('motoUser');
+  localStorage.removeItem('motoUser');
+  window.location.href='/login';
+}
+
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
+function badgeForStatus(status){
+  const cls = status === 'Completed' ? 'badge-completed' : 'badge-progress';
+  return `<span class="badge ${cls}">${escapeHtml(status)}</span>`;
+}
+
+// Recent Activity shows individual entry/exit events, most recent first —
+// so a single record with both an entry and an exit becomes two rows here.
+// Pulling the 5 most recent *records* (not events) is enough since each can
+// only ever produce at most 2 events.
+async function loadRecentActivity(userId){
+  const tbody = document.getElementById('activityTableBody');
+  try {
+    const res = await fetch(`/api/entry-exit-records?owner_id=${encodeURIComponent(userId)}&page=1&page_size=5`);
+    if(!res.ok) throw new Error(`Request failed (${res.status})`);
+    const data = await res.json();
+
+    const events = [];
+    (data.records || []).forEach(r => {
+      if (r.entry_time) {
+        events.push({
+          date: r.date,
+          time: r.time_in,
+          activity: 'Entered Campus',
+          status: r.status,
+          ts: new Date(r.entry_time).getTime(),
+        });
+      }
+      if (r.exit_time) {
+        events.push({
+          date: r.date,
+          time: r.time_out,
+          activity: 'Exited Campus',
+          status: r.status,
+          ts: new Date(r.exit_time).getTime(),
+        });
+      }
+    });
+    events.sort((a, b) => b.ts - a.ts);
+    const recent = events.slice(0, 5);
+
+    if (recent.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-hint);padding:20px 0;">No recorded activity yet.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = recent.map(e => `
+      <tr>
+        <td>${escapeHtml(e.date)}</td>
+        <td>${escapeHtml(e.time)}</td>
+        <td>${escapeHtml(e.activity)}</td>
+        <td>${badgeForStatus(e.status)}</td>
+      </tr>
+    `).join('');
+  } catch (err) {
+    console.error('Failed to load recent activity:', err);
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-hint);padding:20px 0;">Could not load recent activity.</td></tr>';
+  }
+}
+
+async function loadDashboard(){
+  const raw = sessionStorage.getItem('motoUser') || localStorage.getItem('motoUser');
+  if(!raw){
+    window.location.href='/login';
+    return;
+  }
+
+  let user;
+  try {
+    user=JSON.parse(raw);
+  } catch(e){
+    window.location.href='/login';
+    return;
+  }
+
+  // Populate profile / header immediately from the stored login response.
+  const initials=getInitials(user.fullName);
+  document.getElementById('userAvatar').textContent=initials;
+  document.getElementById('profileAvatar').textContent=initials;
+  document.getElementById('userNameChip').textContent=user.fullName || 'Unknown';
+  document.getElementById('profileName').textContent=user.fullName || 'Unknown';
+  document.getElementById('welcomeHeading').textContent=`Welcome back, ${(user.fullName||'').split(' ')[0]||'there'}! 👋`;
+  document.getElementById('profileMeta').textContent=`User ID: ${user.idNumber||'—'}`;
+
+  const roleLabel = user.role==='staff'
+    ? `Staff — ${user.department||'—'}`
+    : `Student — ${user.department||'—'}${user.yearLevel?', '+user.yearLevel:''}`;
+  const roleIcon = user.role==='staff' ? 'ti-briefcase' : 'ti-school';
+  document.getElementById('roleBadge').innerHTML =
+    `<i class="ti ${roleIcon}" style="font-size:13px;" aria-hidden="true"></i> ${roleLabel}`;
+
+  // Fetch this user's motorcycle, if any.
+  try {
+    const res=await fetch(`/api/motorcycles?owner_id=${encodeURIComponent(user.id)}`);
+    const motorcycles=await res.json();
+    const moto = Array.isArray(motorcycles) && motorcycles.length>0 ? motorcycles[0] : null;
+
+    const motoStatusPill=document.getElementById('motoStatusPill');
+    const qrStatusPill=document.getElementById('qrStatusPill');
+
+    if(moto){
+      document.getElementById('motoValue').textContent = `${moto.brand||''} ${moto.model||''}`.trim() || '—';
+      document.getElementById('motoPlate').textContent = moto.plate || '—';
+
+      const status = moto.status || 'Pending';
+      motoStatusPill.className = 'status-pill ' + (status==='Registered' ? 'status-active' : status==='Flagged' ? 'status-flagged' : 'status-pending');
+      motoStatusPill.innerHTML = `<i class="ti ti-circle-check" style="font-size:12px;" aria-hidden="true"></i> ${status}`;
+
+      // No QR-code system is wired up yet on the backend, so this mirrors
+      // the motorcycle's own status as a placeholder rather than claiming a
+      // QR code exists.
+      qrStatusPill.className = 'status-pill ' + (status==='Registered' ? 'status-active' : 'status-pending');
+      qrStatusPill.textContent = status==='Registered' ? 'Active' : 'Pending';
+    } else {
+      document.getElementById('motoValue').textContent = 'No motorcycle on file';
+      document.getElementById('motoPlate').textContent = '—';
+      motoStatusPill.className = 'status-pill status-pending';
+      motoStatusPill.innerHTML = '<i class="ti ti-circle-check" style="font-size:12px;" aria-hidden="true"></i> None';
+      qrStatusPill.className = 'status-pill status-pending';
+      qrStatusPill.textContent = 'N/A';
+    }
+  } catch (err) {
+    document.getElementById('motoValue').textContent = 'Could not load';
+  }
+
+  loadRecentActivity(user.id);
+}
+
+loadDashboard();
+</script>
+</body>
+</html>

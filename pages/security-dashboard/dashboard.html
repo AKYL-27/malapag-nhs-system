@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Dashboard — Moto Monitor</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css"/>
+<link rel="stylesheet" href="styles.css"/>
+  <link rel="shortcut icon" href="../../images/mini-logo.png" />
+
+</head>
+<body>
+<h1 class="sr-only">Motorcycle Entry and Exit Monitoring System – Dashboard</h1>
+
+<div class="overlay" id="overlay" onclick="closeMobileSidebar()"></div>
+<aside class="sidebar" id="sidebar"></aside>
+
+<main class="main" id="main">
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="mobile-menu-btn" onclick="openMobileSidebar()" aria-label="Open menu">
+        <i class="ti ti-menu-2" aria-hidden="true"></i>
+      </button>
+      <div class="topbar-titles">
+        <div class="page-title">Dashboard</div>
+        <div class="breadcrumb" id="topbarDate"></div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="notif-btn" aria-label="Notifications">
+        <i class="ti ti-bell" style="font-size:17px;" aria-hidden="true"></i>
+        <span class="notif-dot"></span>
+      </div>
+      <div class="user-chip">
+        <div class="user-avatar" id="userAvatar">--</div>
+        <span class="user-name" id="userName">Guard</span>
+        <i class="ti ti-chevron-down" style="font-size:13px;color:var(--text-hint);" aria-hidden="true"></i>
+      </div>
+    </div>
+  </header>
+
+  <div class="content">
+    <section aria-labelledby="dash-heading">
+      <h2 id="dash-heading" class="sr-only">Dashboard overview</h2>
+      <div class="cards-row">
+        <div class="stat-card accent-blue">
+          <div class="stat-top">
+            <span class="stat-label">Vehicles Entered Today</span>
+            <div class="stat-icon si-blue"><i class="ti ti-login" aria-hidden="true"></i></div>
+          </div>
+          <div class="stat-num" id="statEntered">—</div>
+          <div class="stat-sub" id="statEnteredSub">Loading...</div>
+        </div>
+        <div class="stat-card accent-green">
+          <div class="stat-top">
+            <span class="stat-label">Vehicles Exited Today</span>
+            <div class="stat-icon si-green"><i class="ti ti-logout" aria-hidden="true"></i></div>
+          </div>
+          <div class="stat-num" id="statExited">—</div>
+          <div class="stat-sub">Exits logged today</div>
+        </div>
+        <div class="stat-card accent-amber">
+          <div class="stat-top">
+            <span class="stat-label">Currently Inside Campus</span>
+            <div class="stat-icon si-amber"><i class="ti ti-motorbike" aria-hidden="true"></i></div>
+          </div>
+          <div class="stat-num" id="statInside">—</div>
+          <div class="stat-sub">As of <span id="currentTime">—</span></div>
+        </div>
+      </div>
+
+      <div class="section-header">
+        <span class="section-title">Recent QR Scan Activity</span>
+        <a class="section-link" href="entry.html">View all →</a>
+      </div>
+      <div class="card" style="margin-bottom:16px;">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Owner Name</th><th>Plate Number</th><th>Time</th><th>Status</th></tr></thead>
+            <tbody id="recentScans">
+              <tr><td colspan="4" style="text-align:center;color:var(--text-hint);">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <a class="quick-btn" href="scanner.html">
+        <i class="ti ti-qrcode" aria-hidden="true"></i> Start QR Scanner
+      </a>
+    </section>
+  </div>
+</main>
+
+<div class="scan-toast" id="scanToast">
+  <i class="ti ti-circle-check" style="font-size:18px;color:#6ee7b7;" aria-hidden="true"></i>
+  <span id="toastMsg">Action confirmed</span>
+</div>
+
+<script src="sidebar.js"></script>
+<script src="app.js"></script>
+<script>renderSidebar('dashboard');</script>
+<script>
+// ── SIGNED-IN GUARD (saved by login.html) ────────────────────
+let guard = null;
+try { guard = JSON.parse(sessionStorage.getItem('guard')); } catch (_) {}
+
+if (!guard) {
+  // Not signed in — send back to login.
+  window.location.replace('login.html');
+} else {
+  const name = guard.fullName || 'Guard';
+  const parts = name.trim().split(/\s+/);
+  const initials = (parts[0][0] + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase();
+  document.getElementById('userAvatar').textContent = initials;
+  document.getElementById('userName').textContent = name;
+}
+
+// ── HELPERS ──────────────────────────────────────────────────
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
+function deltaText(n) {
+  if (n > 0) return '↑ +' + n + ' vs. yesterday';
+  if (n < 0) return '↓ ' + n + ' vs. yesterday';
+  return 'Same as yesterday';
+}
+
+// ── LOAD DASHBOARD DATA ──────────────────────────────────────
+async function loadDashboard() {
+  try {
+    const res = await fetch('/api/security/dashboard?limit=5');
+    if (!res.ok) throw new Error('Request failed');
+    const d = await res.json();
+
+    document.getElementById('statEntered').textContent = d.entered_today;
+    document.getElementById('statEnteredSub').textContent = deltaText(d.entered_delta);
+    document.getElementById('statExited').textContent = d.exited_today;
+    document.getElementById('statInside').textContent = d.inside_now;
+    document.getElementById('currentTime').textContent = d.as_of;
+
+    const body = document.getElementById('recentScans');
+    if (!d.recent.length) {
+      body.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-hint);">No scans yet.</td></tr>';
+      return;
+    }
+    body.innerHTML = d.recent.map(r => `
+      <tr>
+        <td>${escapeHtml(r.owner)}</td>
+        <td><span class="plate">${escapeHtml(r.plate)}</span></td>
+        <td>${escapeHtml(r.time)}</td>
+        <td>${r.type === 'entry'
+          ? '<span class="badge badge-entry">↓ Entry</span>'
+          : '<span class="badge badge-exit">↑ Exit</span>'}</td>
+      </tr>`).join('');
+  } catch (err) {
+    document.getElementById('statEnteredSub').textContent = 'Could not load data';
+    document.getElementById('recentScans').innerHTML =
+      '<tr><td colspan="4" style="text-align:center;color:var(--text-hint);">Could not reach the server.</td></tr>';
+  }
+}
+
+if (guard) {
+  loadDashboard();
+  setInterval(loadDashboard, 30000); // refresh every 30 seconds
+}
+</script>
+</body>
+</html>

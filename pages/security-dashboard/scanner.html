@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>QR Scanner — Moto Monitor</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css"/>
+<link rel="stylesheet" href="styles.css"/>
+  <link rel="shortcut icon" href="../../images/mini-logo.png" />
+
+</head>
+<body>
+<h1 class="sr-only">QR Code Scanner for motorcycle entry and exit verification</h1>
+
+<div class="overlay" id="overlay" onclick="closeMobileSidebar()"></div>
+<aside class="sidebar" id="sidebar"></aside>
+
+<main class="main" id="main">
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="mobile-menu-btn" onclick="openMobileSidebar()" aria-label="Open menu">
+        <i class="ti ti-menu-2" aria-hidden="true"></i>
+      </button>
+      <div class="topbar-titles">
+        <div class="page-title">QR Scanner</div>
+        <div class="breadcrumb" id="topbarDate"></div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="notif-btn" aria-label="Notifications">
+        <i class="ti ti-bell" style="font-size:17px;" aria-hidden="true"></i>
+        <span class="notif-dot"></span>
+      </div>
+      <div class="user-chip">
+        <div class="user-avatar" id="chipAvatar">--</div>
+        <span class="user-name" id="chipName">Guard</span>
+        <i class="ti ti-chevron-down" style="font-size:13px;color:var(--text-hint);" aria-hidden="true"></i>
+      </div>
+    </div>
+  </header>
+
+  <div class="content">
+    <section aria-labelledby="scan-heading">
+      <h2 id="scan-heading" class="sr-only">QR Code Scanner</h2>
+      <div class="scanner-layout">
+        <div>
+          <div class="cam-wrapper" id="camWrapper">
+            <div class="cam-placeholder" id="camPlaceholder">
+              <i class="ti ti-camera-off" aria-hidden="true"></i>
+              <p>Camera not started.<br>Click "Start Camera" below.</p>
+            </div>
+            <video id="videoEl" autoplay playsinline muted style="display:none;"></video>
+            <div class="qr-overlay" id="qrOverlay" style="display:none;">
+              <div class="qr-frame-box">
+                <span class="corner tl"></span>
+                <span class="corner tr"></span>
+                <span class="corner bl"></span>
+                <span class="corner br"></span>
+                <div class="scan-beam"></div>
+              </div>
+            </div>
+            <div class="cam-status" id="camStatus" style="display:none;">
+              <span class="pulse"></span> Camera active — scanning...
+            </div>
+          </div>
+          <div class="cam-controls">
+            <button class="cam-btn primary" id="startCamBtn">
+              <i class="ti ti-camera" aria-hidden="true"></i> Start Camera
+            </button>
+            <button class="cam-btn" id="stopCamBtn" disabled>
+              <i class="ti ti-camera-off" aria-hidden="true"></i> Stop
+            </button>
+            <button class="cam-btn" id="switchCamBtn" disabled title="Switch camera">
+              <i class="ti ti-switch-camera" aria-hidden="true"></i> Flip
+            </button>
+          </div>
+          <div id="camError" style="margin-top:8px;font-size:12px;color:var(--red-text);display:none;"></div>
+        </div>
+
+        <div>
+          <div style="font-size:12px;font-weight:500;color:var(--text-muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:.4px;">Scan Result</div>
+          <div class="result-card">
+            <div class="result-header">
+              <div class="result-avatar" id="resultAvatar">—</div>
+              <div>
+                <div class="result-name" id="resultName">Waiting for scan...</div>
+                <div class="result-role" id="resultRole">No QR detected yet</div>
+              </div>
+            </div>
+            <div class="result-row">
+              <span class="result-key">Plate No.</span>
+              <span class="plate" id="resultPlate">—</span>
+            </div>
+            <div class="result-row">
+              <span class="result-key">Model</span>
+              <span class="result-val" id="resultModel">—</span>
+            </div>
+            <div class="result-row">
+              <span class="result-key">Color</span>
+              <span class="result-val" id="resultColor">—</span>
+            </div>
+            <div class="result-row" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);">
+              <span class="result-key">Verification</span>
+              <span class="verify-badge verify-none" id="resultVerify">Awaiting scan</span>
+            </div>
+          </div>
+          <div class="action-btns">
+            <button class="btn-entry" id="btnEntry" disabled>
+              <i class="ti ti-login" aria-hidden="true"></i> Confirm Entry
+            </button>
+            <button class="btn-exit" id="btnExit" disabled>
+              <i class="ti ti-logout" aria-hidden="true"></i> Confirm Exit
+            </button>
+          </div>
+          <div style="margin-top:12px;background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:10px 12px;">
+            <div style="font-size:11px;color:var(--text-hint);margin-bottom:3px;">Last confirmed</div>
+            <div style="font-size:12px;font-weight:500;color:var(--text);" id="lastConfirmed">No action yet</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<div class="scan-toast" id="scanToast">
+  <i class="ti ti-circle-check" style="font-size:18px;color:#6ee7b7;" aria-hidden="true"></i>
+  <span id="toastMsg">Action confirmed</span>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+<script src="sidebar.js"></script>
+<script src="app.js"></script>
+<script>renderSidebar('scanner');</script>
+<script>
+(function () {
+'use strict';
+// ── SIGNED-IN GUARD (saved by login.html) ────────────────────
+let guard = null;
+try { guard = JSON.parse(sessionStorage.getItem('guard')); } catch (_) {}
+if (!guard || !guard.id) window.location.replace('login.html');
+
+function initials(name) {
+  const p = (name || '').trim().split(/\s+/).filter(Boolean);
+  if (!p.length) return '--';
+  return (p[0][0] + (p.length > 1 ? p[p.length - 1][0] : '')).toUpperCase();
+}
+if (guard) {
+  document.getElementById('chipAvatar').textContent = initials(guard.fullName);
+  document.getElementById('chipName').textContent = guard.fullName || 'Guard';
+}
+
+// ── TOAST (replaces any demo version in app.js) ──────────────
+let toastTimer = null;
+function showToast(msg, isError) {
+  const t = document.getElementById('scanToast');
+  document.getElementById('toastMsg').textContent = msg;
+  t.style.background = isError ? '#991b1b' : '';
+  t.style.transform = 'translateY(0)';
+  t.style.opacity = '1';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    t.style.transform = 'translateY(80px)';
+    t.style.opacity = '0';
+  }, 3500);
+}
+
+// ── STATE ────────────────────────────────────────────────────
+let stream = null;
+let scanning = false;
+let facingMode = 'environment';
+let lastCode = '';
+let lastCodeAt = 0;
+let lookupBusy = false;
+let current = null; // { motorcycle, owner, inside } for the displayed scan
+
+const video = document.getElementById('videoEl');
+const canvas = document.createElement('canvas');
+const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+const STATUS_STYLES = {
+  Registered: { text: 'Verified',         bg: '#d1fae5', color: '#065f46' },
+  Pending:    { text: 'Pending approval', bg: '#fef3c7', color: '#92400e' },
+  Flagged:    { text: 'Flagged',          bg: '#fee2e2', color: '#991b1b' },
+};
+
+// ── CAMERA ───────────────────────────────────────────────────
+function showCamError(msg) {
+  const el = document.getElementById('camError');
+  el.textContent = msg;
+  el.style.display = msg ? 'block' : 'none';
+}
+
+function setCameraUI(on) {
+  document.getElementById('camPlaceholder').style.display = on ? 'none' : '';
+  video.style.display = on ? 'block' : 'none';
+  document.getElementById('qrOverlay').style.display = on ? '' : 'none';
+  document.getElementById('camStatus').style.display = on ? '' : 'none';
+  document.getElementById('startCamBtn').disabled = on;
+  document.getElementById('stopCamBtn').disabled = !on;
+  document.getElementById('switchCamBtn').disabled = !on;
+}
+
+async function startCamera() {
+  showCamError('');
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    showCamError('Camera is not available. Open this page on localhost or over HTTPS.');
+    return;
+  }
+  try {
+    stopStream();
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: facingMode } },
+      audio: false,
+    });
+    video.srcObject = stream;
+    await video.play();
+    setCameraUI(true);
+    scanning = true;
+    requestAnimationFrame(tick);
+  } catch (err) {
+    setCameraUI(false);
+    showCamError(err && err.name === 'NotAllowedError'
+      ? 'Camera permission was denied. Allow camera access and try again.'
+      : 'Could not start the camera.');
+  }
+}
+
+function stopStream() {
+  scanning = false;
+  if (stream) {
+    stream.getTracks().forEach(t => t.stop());
+    stream = null;
+  }
+  video.srcObject = null;
+}
+
+function stopCamera() {
+  stopStream();
+  setCameraUI(false);
+}
+
+function switchCamera() {
+  facingMode = facingMode === 'environment' ? 'user' : 'environment';
+  startCamera();
+}
+
+function tick() {
+  if (!scanning) return;
+  if (video.readyState === video.HAVE_ENOUGH_DATA && video.videoWidth) {
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const code = jsQR(img.data, img.width, img.height, { inversionAttempts: 'dontInvert' });
+    if (code && code.data) handleCode(code.data);
+  }
+  requestAnimationFrame(tick);
+}
+
+// ── LOOKUP ───────────────────────────────────────────────────
+async function handleCode(data) {
+  const now = Date.now();
+  // Ignore the same code being read repeatedly while it's held in view.
+  if (data === lastCode && now - lastCodeAt < 4000) return;
+  if (lookupBusy) return;
+  lastCode = data;
+  lastCodeAt = now;
+  lookupBusy = true;
+
+  try {
+    const res = await fetch('/api/scan/lookup?code=' + encodeURIComponent(data));
+    const result = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      resetResult();
+      showToast(result.error || 'Could not read this QR code.', true);
+      return;
+    }
+    current = result;
+    renderResult(result);
+  } catch (_) {
+    showToast('Could not reach the server.', true);
+  } finally {
+    lookupBusy = false;
+  }
+}
+
+function renderResult(r) {
+  const m = r.motorcycle;
+  const status = STATUS_STYLES[m.status] || { text: m.status || 'Unknown', bg: '#e2e8f0', color: '#334155' };
+
+  document.getElementById('resultAvatar').textContent = initials(r.owner.name);
+  document.getElementById('resultName').textContent = r.owner.name;
+
+  const roleLabel = r.owner.role === 'staff' ? 'Staff' : r.owner.role === 'student' ? 'Student' : '';
+  const bits = [roleLabel, r.owner.idNumber, r.inside ? 'Currently inside' : 'Outside'].filter(Boolean);
+  document.getElementById('resultRole').textContent = bits.join(' · ');
+
+  document.getElementById('resultPlate').textContent = m.plate || '—';
+  document.getElementById('resultModel').textContent = [m.brand, m.model].filter(Boolean).join(' ') || '—';
+  document.getElementById('resultColor').textContent = m.color || '—';
+
+  const badge = document.getElementById('resultVerify');
+  badge.textContent = status.text;
+  badge.style.background = status.bg;
+  badge.style.color = status.color;
+
+  // Exit if they're inside; entry only if approved and currently outside.
+  document.getElementById('btnEntry').disabled = r.inside || m.status !== 'Registered';
+  document.getElementById('btnExit').disabled = !r.inside;
+
+  if (!r.inside && m.status !== 'Registered') {
+    showToast('Entry not allowed: motorcycle is ' + status.text.toLowerCase() + '.', true);
+  }
+}
+
+function resetResult() {
+  current = null;
+  document.getElementById('resultAvatar').textContent = '—';
+  document.getElementById('resultName').textContent = 'Waiting for scan...';
+  document.getElementById('resultRole').textContent = 'No QR detected yet';
+  document.getElementById('resultPlate').textContent = '—';
+  document.getElementById('resultModel').textContent = '—';
+  document.getElementById('resultColor').textContent = '—';
+  const badge = document.getElementById('resultVerify');
+  badge.textContent = 'Awaiting scan';
+  badge.style.background = '';
+  badge.style.color = '';
+  document.getElementById('btnEntry').disabled = true;
+  document.getElementById('btnExit').disabled = true;
+}
+
+// ── CONFIRM ENTRY / EXIT ─────────────────────────────────────
+async function confirmAction(action) {
+  if (!current) return;
+  const entryBtn = document.getElementById('btnEntry');
+  const exitBtn = document.getElementById('btnExit');
+  entryBtn.disabled = true;
+  exitBtn.disabled = true;
+
+  const m = current.motorcycle;
+  try {
+    const res = await fetch('/api/scan/confirm', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ motorcycle_id: m.id, action, guard_id: guard.id }),
+    });
+    const result = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      showToast(result.error || 'Something went wrong. Please try again.', true);
+      renderResult(current); // restore the right buttons
+      return;
+    }
+
+    const label = action === 'entry' ? 'Entry' : 'Exit';
+    const time = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    document.getElementById('lastConfirmed').textContent =
+      label + ' — ' + current.owner.name + ' (' + m.plate + ') at ' + time;
+    showToast(label + ' confirmed for ' + m.plate + '.');
+    resetResult();
+    lastCode = ''; // allow re-scanning the same code right away
+  } catch (_) {
+    showToast('Could not reach the server.', true);
+    renderResult(current);
+  }
+}
+
+// ── WIRE UP BUTTONS ──────────────────────────────────────────
+document.getElementById('startCamBtn').addEventListener('click', startCamera);
+document.getElementById('stopCamBtn').addEventListener('click', stopCamera);
+document.getElementById('switchCamBtn').addEventListener('click', switchCamera);
+document.getElementById('btnEntry').addEventListener('click', () => confirmAction('entry'));
+document.getElementById('btnExit').addEventListener('click', () => confirmAction('exit'));
+})();
+</script>
+</body>
+</html>

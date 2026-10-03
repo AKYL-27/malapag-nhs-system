@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Sign In — Moto Monitor</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css"/>
+<link rel="stylesheet" href="styles.css"/>
+  <link rel="shortcut icon" href="../../images/mini-logo.png" />
+
+</head>
+<body>
+<h1 class="sr-only">Security Personnel Sign In — Motorcycle Monitoring System</h1>
+
+<div class="auth-page">
+  <div class="auth-wrap">
+
+    <!-- LEFT BRAND PANEL -->
+    <div class="auth-side">
+      <div class="auth-side-logo">
+        <div class="logo-icon"><i class="ti ti-motorbike" aria-hidden="true"></i></div>
+        <div>
+          <div class="school">Campus Security</div>
+          <div class="title">Moto Monitor</div>
+        </div>
+      </div>
+      <div class="auth-side-mid">
+        <h2>Welcome back.</h2>
+        <p>Sign in to scan motorcycle QR codes, verify riders, and log entries and exits at your post.</p>
+        <div class="auth-feature-list">
+          <div class="auth-feature-item"><i class="ti ti-scan" aria-hidden="true"></i> Fast QR scanning at the gate</div>
+          <div class="auth-feature-item"><i class="ti ti-shield-check" aria-hidden="true"></i> Verify registered motorcycles</div>
+          <div class="auth-feature-item"><i class="ti ti-history" aria-hidden="true"></i> Full entry &amp; exit logs</div>
+        </div>
+      </div>
+      <div class="auth-side-foot">&copy; 2026 Campus Security Office. All rights reserved.</div>
+    </div>
+
+    <!-- RIGHT FORM PANEL -->
+    <div class="auth-form-panel">
+      <form id="loginForm" novalidate>
+        <div class="form-step">
+          <div class="auth-form-header">
+            <h1>Sign in</h1>
+            <p>Use your badge / employee ID or email address</p>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="identifier">Badge / employee ID or email <span class="req">*</span></label>
+            <div class="form-input-wrap">
+              <i class="ti ti-id-badge form-input-icon" aria-hidden="true"></i>
+              <input type="text" id="identifier" class="form-input with-icon" placeholder="e.g. SEC-2024-0089" autocomplete="username"/>
+            </div>
+            <div class="form-error" id="err-identifier"><i class="ti ti-alert-circle" aria-hidden="true"></i> Please enter your badge ID or email.</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="password">Password <span class="req">*</span></label>
+            <div class="form-input-wrap">
+              <i class="ti ti-lock form-input-icon" aria-hidden="true"></i>
+              <input type="password" id="password" class="form-input with-icon" placeholder="Enter your password" autocomplete="current-password"/>
+              <button type="button" class="form-input-toggle" onclick="togglePassword(this)" aria-label="Show or hide password">Show</button>
+            </div>
+            <div class="form-error" id="err-password"><i class="ti ti-alert-circle" aria-hidden="true"></i> Please enter your password.</div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-block" id="loginBtn">
+              <i class="ti ti-login" aria-hidden="true"></i> Sign in
+            </button>
+          </div>
+
+          <div class="auth-footer-link">New to Moto Monitor? <a href="register.html">Create an account</a></div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="scan-toast" id="scanToast" style="position:fixed;bottom:24px;right:24px;z-index:999;background:var(--text);color:#fff;padding:12px 16px;border-radius:10px;font-size:13px;display:flex;align-items:center;gap:10px;box-shadow:0 4px 20px rgba(0,0,0,0.2);transform:translateY(80px);opacity:0;transition:all .3s;max-width:300px;">
+  <i class="ti ti-alert-circle" style="font-size:18px;color:#fca5a5;" aria-hidden="true"></i>
+  <span id="toastMsg">Notice</span>
+</div>
+<style>
+  .scan-toast.show{transform:translateY(0)!important;opacity:1!important;}
+  .form-input-toggle{font-size:12px;font-weight:600;}
+</style>
+
+<script>
+function setError(fieldId,isError){
+  const group=document.getElementById(fieldId).closest('.form-group');
+  const err=document.getElementById('err-'+fieldId);
+  if(group) group.classList.toggle('error',isError);
+  if(err) err.classList.toggle('show',isError);
+}
+
+function togglePassword(btn){
+  const input=document.getElementById('password');
+  if(input.type==='password'){ input.type='text'; btn.textContent='Hide'; }
+  else { input.type='password'; btn.textContent='Show'; }
+}
+
+document.getElementById('loginForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+
+  const identifier=document.getElementById('identifier').value.trim();
+  const password=document.getElementById('password').value;
+
+  setError('identifier', identifier==='');
+  setError('password', password==='');
+  if(identifier===''||password===''){
+    showToast('Please fill in all fields.');
+    return;
+  }
+
+  const btn=document.getElementById('loginBtn');
+  const originalHTML=btn.innerHTML;
+  btn.disabled=true;
+  btn.innerHTML='<i class="ti ti-loader-2" aria-hidden="true"></i> Signing in...';
+
+  try{
+    const res=await fetch('/api/security/login',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({identifier,password}),
+    });
+    const result=await res.json().catch(()=>({}));
+
+    if(!res.ok){
+      showToast(result.error||'Something went wrong. Please try again.');
+      btn.disabled=false;
+      btn.innerHTML=originalHTML;
+      return;
+    }
+
+    // Keep the signed-in guard for the dashboard/profile pages.
+    try{ sessionStorage.setItem('guard', JSON.stringify(result.guard)); }catch(_){}
+    window.location.href='dashboard.html';
+  }catch(err){
+    showToast('Could not reach the server. Please check your connection.');
+    btn.disabled=false;
+    btn.innerHTML=originalHTML;
+  }
+});
+
+function showToast(msg){
+  const t=document.getElementById('scanToast');
+  document.getElementById('toastMsg').textContent=msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+</script>
+</body>
+</html>

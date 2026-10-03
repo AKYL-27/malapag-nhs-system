@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Sign In — Moto Monitor</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css"/>
+<link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+<h1 class="sr-only">Sign In — Motorcycle Monitoring System for Students and Staff</h1>
+
+<div class="auth-page">
+  <div class="auth-wrap">
+
+    <!-- LEFT BRAND PANEL -->
+    <div class="auth-side">
+      <div class="auth-side-logo">
+        <div class="logo-icon"><i class="ti ti-motorbike" aria-hidden="true"></i></div>
+        <div>
+          <div class="school">Campus Portal</div>
+          <div class="title">Moto Monitor</div>
+        </div>
+      </div>
+      <div class="auth-side-mid">
+        <h2>Welcome back. Let's get you through the gate.</h2>
+        <p>Sign in to view your QR code, check your motorcycle status, and track your entry & exit history.</p>
+        <div class="auth-feature-list">
+          <div class="auth-feature-item"><i class="ti ti-qrcode" aria-hidden="true"></i> Instant QR code access</div>
+          <div class="auth-feature-item"><i class="ti ti-shield-check" aria-hidden="true"></i> Verified, secure gate entry</div>
+          <div class="auth-feature-item"><i class="ti ti-history" aria-hidden="true"></i> Full activity history</div>
+        </div>
+      </div>
+      <div class="auth-side-foot">&copy; 2026 Campus Security Office. All rights reserved.</div>
+    </div>
+
+    <!-- RIGHT FORM PANEL -->
+    <div class="auth-form-panel" style="justify-content:center;">
+
+      <div class="auth-form-header">
+        <h1>Sign in to your account</h1>
+        <p>Enter your credentials to access your dashboard</p>
+      </div>
+
+      <div class="role-toggle" id="roleToggle">
+        <div class="role-option selected" data-role="student">
+          <i class="ti ti-school" aria-hidden="true"></i>
+          <span>Student</span>
+        </div>
+        <div class="role-option" data-role="staff">
+          <i class="ti ti-briefcase" aria-hidden="true"></i>
+          <span>Staff / Faculty</span>
+        </div>
+      </div>
+
+      <form id="loginForm" novalidate>
+
+        <div class="form-group">
+          <label class="form-label" for="loginId" id="loginIdLabel">Student ID or Email <span class="req">*</span></label>
+          <div class="form-input-wrap">
+            <i class="ti ti-user form-input-icon" aria-hidden="true"></i>
+            <input type="text" id="loginId" class="form-input with-icon" placeholder="2021-0457 or you@campus.edu" autocomplete="username"/>
+          </div>
+          <div class="form-error" id="err-loginId"><i class="ti ti-alert-circle" aria-hidden="true"></i> Please enter your ID or email.</div>
+        </div>
+
+        <div class="form-group">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <label class="form-label" for="loginPassword">Password <span class="req">*</span></label>
+            <a href="forgot-password.html" style="font-size:12px;color:var(--blue-600);font-weight:600;text-decoration:none;">Forgot password?</a>
+          </div>
+          <div class="form-input-wrap">
+            <i class="ti ti-lock form-input-icon" aria-hidden="true"></i>
+            <input type="password" id="loginPassword" class="form-input with-icon" placeholder="Enter your password" autocomplete="current-password"/>
+            <button type="button" class="form-input-toggle" onclick="togglePassword('loginPassword',this)"><i class="ti ti-eye" aria-hidden="true"></i></button>
+          </div>
+          <div class="form-error" id="err-loginPassword"><i class="ti ti-alert-circle" aria-hidden="true"></i> Please enter your password.</div>
+        </div>
+
+        <div class="checkbox-row" style="margin-bottom:18px;">
+          <input type="checkbox" id="rememberMe"/>
+          <label for="rememberMe">Remember me on this device</label>
+        </div>
+
+        <div class="form-error" id="err-loginGeneral" style="margin-bottom:14px;justify-content:center;background:var(--red-bg);padding:10px 12px;border-radius:10px;">
+          <i class="ti ti-alert-circle" aria-hidden="true"></i> Incorrect ID/email or password. Please try again.
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-primary btn-block" id="loginSubmitBtn" onclick="submitLogin()">
+            <i class="ti ti-login" aria-hidden="true"></i> Sign In
+          </button>
+        </div>
+
+        <div class="auth-divider"><span>OR</span></div>
+
+        <div class="btn-row" style="margin-top:0;">
+          <button type="button" class="btn btn-secondary btn-block"><i class="ti ti-qrcode" aria-hidden="true"></i> Sign in with QR Code</button>
+        </div>
+
+        <div class="auth-footer-link">Don't have an account yet? <a href="register.html">Create one</a></div>
+
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="scan-toast" id="scanToast" style="position:fixed;bottom:24px;right:24px;z-index:999;background:var(--text);color:#fff;padding:12px 16px;border-radius:10px;font-size:13px;display:flex;align-items:center;gap:10px;box-shadow:0 4px 20px rgba(0,0,0,0.2);transform:translateY(80px);opacity:0;transition:all .3s;max-width:300px;">
+  <i class="ti ti-alert-circle" style="font-size:18px;color:#fca5a5;" aria-hidden="true"></i>
+  <span id="toastMsg">Notice</span>
+</div>
+<style>.scan-toast.show{transform:translateY(0)!important;opacity:1!important;}</style>
+
+<script>
+let selectedRole='student';
+
+document.querySelectorAll('.role-option').forEach(opt=>{
+  opt.addEventListener('click',()=>{
+    document.querySelectorAll('.role-option').forEach(o=>o.classList.remove('selected'));
+    opt.classList.add('selected');
+    selectedRole=opt.dataset.role;
+    updateLoginLabel();
+  });
+});
+
+function updateLoginLabel(){
+  const label=document.getElementById('loginIdLabel');
+  const input=document.getElementById('loginId');
+  if(selectedRole==='staff'){
+    label.innerHTML='Employee ID or Email <span class="req">*</span>';
+    input.placeholder='EMP-2024-0089 or you@campus.edu';
+  }else{
+    label.innerHTML='Student ID or Email <span class="req">*</span>';
+    input.placeholder='2021-0457 or you@campus.edu';
+  }
+}
+
+function togglePassword(fieldId,btn){
+  const input=document.getElementById(fieldId);
+  const icon=btn.querySelector('i');
+  if(input.type==='password'){ input.type='text'; icon.className='ti ti-eye-off'; }
+  else { input.type='password'; icon.className='ti ti-eye'; }
+}
+
+function setError(fieldId,isError){
+  const group=document.getElementById(fieldId).closest('.form-group');
+  const err=document.getElementById('err-'+fieldId);
+  if(group) group.classList.toggle('error',isError);
+  if(err) err.classList.toggle('show',isError);
+}
+
+function submitLogin(){
+  const id=document.getElementById('loginId').value.trim();
+  const pw=document.getElementById('loginPassword').value;
+  let valid=true;
+
+  setError('loginId', id===''); if(id==='') valid=false;
+  setError('loginPassword', pw===''); if(pw==='') valid=false;
+  document.getElementById('err-loginGeneral').classList.remove('show');
+
+  if(!valid){
+    showToast('Please fill in all required fields.');
+    return;
+  }
+
+  // ── DEMO ONLY: simulate an auth check ──────────────────────
+  // Replace this block with a real API call to your backend.
+  const btn=document.getElementById('loginSubmitBtn');
+  const originalHtml=btn.innerHTML;
+  btn.disabled=true;
+  btn.innerHTML='<i class="ti ti-loader" aria-hidden="true"></i> Signing in...';
+
+  setTimeout(()=>{
+    btn.disabled=false;
+    btn.innerHTML=originalHtml;
+    // Demo credential: any ID + password "demo1234" succeeds
+    if(pw==='demo1234'){
+      showToast('Signed in successfully. Redirecting...');
+      setTimeout(()=>{ window.location.href='dashboard.html'; },800);
+    }else{
+      document.getElementById('err-loginGeneral').classList.add('show');
+      showToast('Sign in failed. Check your credentials.');
+    }
+  },900);
+}
+
+document.getElementById('loginPassword').addEventListener('keydown',(e)=>{
+  if(e.key==='Enter') submitLogin();
+});
+document.getElementById('loginId').addEventListener('keydown',(e)=>{
+  if(e.key==='Enter') submitLogin();
+});
+
+function showToast(msg){
+  const t=document.getElementById('scanToast');
+  document.getElementById('toastMsg').textContent=msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+</script>
+</body>
+</html>

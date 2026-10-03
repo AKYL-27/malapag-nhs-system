@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Motorcycle Management</title>
+  <link rel="stylesheet" href="../../vendors/mdi/css/materialdesignicons.min.css">
+  <link rel="stylesheet" href="../../vendors/base/vendor.bundle.base.css">
+  <link rel="stylesheet" href="../../css/style.css">
+  <link rel="shortcut icon" href="../../images/mini-logo.png" />
+  <style>
+    /* ── Toolbar ── */
+    .moto-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+    .btn-register {
+      background: #4B49AC;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 18px;
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background .2s;
+    }
+    .btn-register:hover { background: #3c3a8e; }
+    .btn-register:disabled { opacity: .6; cursor: not-allowed; }
+
+    .search-box {
+      position: relative;
+      flex: 1;
+      min-width: 180px;
+      max-width: 340px;
+    }
+    .search-box i {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #aaa;
+      font-size: 16px;
+    }
+    .search-box input {
+      width: 100%;
+      padding: 8px 12px 8px 34px;
+      border: 1px solid #dee2e6;
+      border-radius: 6px;
+      font-size: 13px;
+      outline: none;
+      transition: border-color .2s;
+    }
+    .search-box input:focus { border-color: #4B49AC; }
+
+    /* ── Table ── */
+    .table thead th {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      color: #6c757d;
+      border-bottom: 2px solid #e9ecef;
+    }
+
+    .plate-tag {
+      display: inline-block;
+      background: #2c2c54;
+      color: #fff;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      padding: 3px 10px;
+      border-radius: 4px;
+    }
+
+    .badge-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .badge-status::before {
+      content: '';
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+      display: inline-block;
+    }
+    .badge-registered { background: #e8faf0; color: #27ae60; }
+    .badge-pending    { background: #fef9e7; color: #f0a500; }
+    .badge-flagged    { background: #fde8e8; color: #c0392b; }
+    .badge-approved   { background: #e8faf0; color: #1e8e5a; }
+    .badge-declined   { background: #fde8e8; color: #a83232; }
+
+    .action-btn {
+      background: none;
+      border: none;
+      padding: 5px 7px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      line-height: 1;
+      transition: background .15s;
+    }
+    .action-btn:hover { background: #f0f0f0; }
+    .action-btn.view     { color: #4B49AC; }
+    .action-btn.edit     { color: #f0a500; }
+    .action-btn.del      { color: #e74c3c; }
+    .action-btn.approve  { color: #27ae60; }
+    .action-btn.decline  { color: #c0392b; }
+
+    .actions-cell { display: flex; align-items: center; gap: 2px; flex-wrap: nowrap; }
+
+    .no-results {
+      text-align: center;
+      padding: 40px 0;
+      color: #aaa;
+      font-size: 14px;
+      display: none;
+    }
+    .no-results i { font-size: 36px; display: block; margin-bottom: 8px; }
+
+    .loading-row td {
+      text-align: center;
+      padding: 30px 0;
+      color: #aaa;
+      font-size: 13px;
+    }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.45);
+      z-index: 1050;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-overlay.open { display: flex; }
+
+    .modal-box {
+      background: #fff;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 500px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.18);
+      overflow: hidden;
+      animation: slideUp .25s ease;
+    }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid #e9ecef;
+    }
+    .modal-header h5 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 700;
+      color: #2c2c54;
+    }
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 20px;
+      color: #aaa;
+      cursor: pointer;
+      line-height: 1;
+      padding: 0 4px;
+    }
+    .modal-close:hover { color: #333; }
+
+    .modal-body { padding: 22px 24px; }
+
+    .form-row-pair {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    @media (max-width: 480px) { .form-row-pair { grid-template-columns: 1fr; } }
+
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: #555;
+      margin-bottom: 5px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1px solid #dee2e6;
+      border-radius: 7px;
+      font-size: 13px;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+      background: #fafafa;
+    }
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      border-color: #4B49AC;
+      box-shadow: 0 0 0 3px rgba(75,73,172,.1);
+      background: #fff;
+    }
+    .form-group textarea { resize: vertical; min-height: 68px; }
+    .form-group.full { grid-column: 1 / -1; }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      padding: 14px 24px 20px;
+    }
+    .btn-cancel {
+      padding: 9px 20px;
+      border: 1px solid #dee2e6;
+      border-radius: 7px;
+      background: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      color: #6c757d;
+      cursor: pointer;
+    }
+    .btn-cancel:hover { background: #f5f5f5; }
+    .btn-save {
+      padding: 9px 22px;
+      border: none;
+      border-radius: 7px;
+      background: #4B49AC;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .btn-save:hover { background: #3c3a8e; }
+    .btn-save:disabled { opacity: .6; cursor: not-allowed; }
+
+    /* ── View Modal ── */
+    .view-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0 24px;
+    }
+    .view-field { margin-bottom: 16px; }
+    .view-field .vf-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      color: #aaa;
+      margin-bottom: 3px;
+    }
+    .view-field .vf-value {
+      font-size: 14px;
+      color: #2c2c54;
+      font-weight: 500;
+    }
+
+    /* ── Moto icon accent ── */
+    .moto-icon-wrap {
+      width: 48px; height: 48px;
+      border-radius: 10px;
+      background: #ebebf8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      color: #4B49AC;
+      margin-bottom: 16px;
+    }
+
+    /* ── Toast ── */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 2000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .toast {
+      background: #2c2c54;
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      box-shadow: 0 6px 20px rgba(0,0,0,.2);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      animation: fadeInUp .3s ease;
+    }
+    .toast.success { background: #27ae60; }
+    .toast.error   { background: #e74c3c; }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container-scroller">
+    <!-- NAVBAR -->
+    <nav class="navbar col-lg-12 col-12 p-0 fixed-top d-flex flex-row">
+      <div class="navbar-brand-wrapper d-flex justify-content-center">
+        <div class="navbar-brand-inner-wrapper d-flex justify-content-between align-items-center w-100">
+          <a class="navbar-brand brand-logo" href="../../index.html"><img src="../../images/logo.png" alt="logo"/></a>
+          <a class="navbar-brand brand-logo-mini" href="../../index.html"><img src="../../images/mini-logo.jpg" alt="logo"/></a>
+          <button class="navbar-toggler navbar-toggler align-self-center" type="button" data-toggle="minimize">
+            <span class="mdi mdi-sort-variant"></span>
+          </button>
+        </div>
+      </div>
+      <div class="navbar-menu-wrapper d-flex align-items-center justify-content-end">
+        <ul class="navbar-nav mr-lg-4 w-100">
+          <li class="nav-item nav-search d-none d-lg-block w-100">
+            <div class="input-group">
+              <div class="input-group-prepend">
+                <span class="input-group-text" id="search"><i class="mdi mdi-magnify"></i></span>
+              </div>
+              <input type="text" class="form-control" placeholder="Search now" aria-label="search" aria-describedby="search">
+            </div>
+          </li>
+        </ul>
+        <ul class="navbar-nav navbar-nav-right">
+          <li class="nav-item nav-profile dropdown">
+            <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown" id="profileDropdown">
+              <img src="../../images/faces/default-profile.jpg" alt="profile"/>
+            </a>
+            <div class="dropdown-menu dropdown-menu-right navbar-dropdown" aria-labelledby="profileDropdown">
+              <a class="dropdown-item"><i class="mdi mdi-settings text-primary"></i> Settings</a>
+              <a class="dropdown-item"><i class="mdi mdi-logout text-primary"></i> Logout</a>
+            </div>
+          </li>
+        </ul>
+        <button class="navbar-toggler navbar-toggler-right d-lg-none align-self-center" type="button" data-toggle="offcanvas">
+          <span class="mdi mdi-menu"></span>
+        </button>
+      </div>
+    </nav>
+
+    <div class="container-fluid page-body-wrapper">
+      <!-- SIDEBAR -->
+      <nav class="sidebar sidebar-offcanvas" id="sidebar">
+        <ul class="nav">
+          <li class="nav-item">
+            <a class="nav-link" href="../../index.html">
+              <i class="mdi mdi-home menu-icon"></i><span class="menu-title">Dashboard</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="../../pages/user-management/users.html">
+              <i class="mdi mdi-account-multiple menu-icon"></i><span class="menu-title">User Management</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="../../pages/motorcycle-management/motorcycle.html">
+              <i class="mdi mdi-motorbike menu-icon"></i><span class="menu-title">Motorcycle Management</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="../../pages/qrcode-management/qrcode.html">
+              <i class="mdi mdi-qrcode menu-icon"></i><span class="menu-title">QR Code Management</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="../../pages/logs/logs.html">
+              <i class="mdi mdi-history menu-icon"></i><span class="menu-title">Entry and Exit Records</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="../../pages/reports/reports.html">
+              <i class="mdi mdi-chart-line menu-icon"></i><span class="menu-title">Reports</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+
+      <!-- MAIN -->
+      <div class="main-panel">
+        <div class="content-wrapper">
+          <div class="row">
+            <div class="col-lg-12 grid-margin stretch-card">
+              <div class="card">
+                <div class="card-body">
+                  <h4 class="card-title mb-1">Motorcycle Management</h4>
+                  <p class="card-description mb-3">Register and manage motorcycles allowed on campus.</p>
+
+                  <!-- Toolbar -->
+                  <div class="moto-toolbar">
+                    <button class="btn-register" id="btnRegister" onclick="openRegisterModal()">
+                      <i class="mdi mdi-plus"></i> Register Motorcycle
+                    </button>
+                    <div class="search-box">
+                      <i class="mdi mdi-magnify"></i>
+                      <input type="text" id="searchInput" placeholder="Search plate number or owner…" oninput="onSearchInput()">
+                    </div>
+                  </div>
+
+                  <!-- Table -->
+                  <div class="table-responsive">
+                    <table class="table table-hover" id="motoTable">
+                      <thead>
+                        <tr>
+                          <th>#</th>
+                          <th>Owner</th>
+                          <th>Plate Number</th>
+                          <th>Brand</th>
+                          <th>Model</th>
+                          <th>Color</th>
+                          <th>Status</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody id="motoTableBody"></tbody>
+                    </table>
+                    <div class="no-results" id="noResults">
+                      <i class="mdi mdi-motorbike"></i>
+                      No motorcycles match your search.
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <footer class="footer">
+          <div class="d-sm-flex justify-content-center justify-content-sm-between">
+            <span class="text-muted text-center text-sm-left d-block d-sm-inline-block">Copyright © 2026 Malapag National High School. All rights reserved.</span>
+          </div>
+        </footer>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       REGISTER / EDIT MODAL
+  ══════════════════════════════════════ -->
+  <div class="modal-overlay" id="addEditModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h5 id="modalTitle">Register Motorcycle</h5>
+        <button class="modal-close" onclick="closeModal('addEditModal')">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-row-pair">
+          <div class="form-group">
+            <label>Owner Name <span style="color:#e74c3c">*</span></label>
+            <input type="text" id="fOwner" placeholder="e.g. Juan dela Cruz">
+          </div>
+          <div class="form-group">
+            <label>Plate Number <span style="color:#e74c3c">*</span></label>
+            <input type="text" id="fPlate" placeholder="e.g. ABC 1234" style="text-transform:uppercase">
+          </div>
+          <div class="form-group">
+            <label>Brand <span style="color:#e74c3c">*</span></label>
+            <input type="text" id="fBrand" placeholder="e.g. Honda">
+          </div>
+          <div class="form-group">
+            <label>Model <span style="color:#e74c3c">*</span></label>
+            <input type="text" id="fModel" placeholder="e.g. Click 125i">
+          </div>
+          <div class="form-group">
+            <label>Color</label>
+            <input type="text" id="fColor" placeholder="e.g. Matte Black">
+          </div>
+          <div class="form-group">
+            <label>Year</label>
+            <input type="number" id="fYear" placeholder="e.g. 2022" min="1990" max="2099">
+          </div>
+          <div class="form-group full">
+            <label>OR / CR Number</label>
+            <input type="text" id="fOrCr" placeholder="Official Receipt / Certificate of Registration no.">
+          </div>
+          <div class="form-group">
+            <label>Status</label>
+            <select id="fStatus">
+              <option value="Registered">Registered</option>
+              <option value="Pending">Pending</option>
+              <option value="Approved">Approved</option>
+              <option value="Declined">Declined</option>
+              <option value="Flagged">Flagged</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" onclick="closeModal('addEditModal')">Cancel</button>
+        <button class="btn-save" id="btnSave" onclick="saveMoto()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       VIEW MODAL
+  ══════════════════════════════════════ -->
+  <div class="modal-overlay" id="viewModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h5>Motorcycle Details</h5>
+        <button class="modal-close" onclick="closeModal('viewModal')">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="moto-icon-wrap"><i class="mdi mdi-motorbike"></i></div>
+        <div class="view-grid">
+          <div class="view-field">
+            <div class="vf-label">Owner</div>
+            <div class="vf-value" id="vOwner">—</div>
+          </div>
+          <div class="view-field">
+            <div class="vf-label">Plate Number</div>
+            <div class="vf-value" id="vPlate">—</div>
+          </div>
+          <div class="view-field">
+            <div class="vf-label">Brand</div>
+            <div class="vf-value" id="vBrand">—</div>
+          </div>
+          <div class="view-field">
+            <div class="vf-label">Model</div>
+            <div class="vf-value" id="vModel">—</div>
+          </div>
+          <div class="view-field">
+            <div class="vf-label">Color</div>
+            <div class="vf-value" id="vColor">—</div>
+          </div>
+          <div class="view-field">
+            <div class="vf-label">Year</div>
+            <div class="vf-value" id="vYear">—</div>
+          </div>
+          <div class="view-field" style="grid-column:1/-1">
+            <div class="vf-label">OR / CR Number</div>
+            <div class="vf-value" id="vOrCr">—</div>
+          </div>
+          <div class="view-field">
+            <div class="vf-label">Status</div>
+            <div class="vf-value" id="vStatus">—</div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" onclick="closeModal('viewModal')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       DELETE CONFIRM MODAL
+  ══════════════════════════════════════ -->
+  <div class="modal-overlay" id="deleteModal">
+    <div class="modal-box" style="max-width:400px">
+      <div class="modal-header">
+        <h5>Remove Motorcycle</h5>
+        <button class="modal-close" onclick="closeModal('deleteModal')">×</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:14px;color:#555;margin:0">
+          Remove motorcycle with plate <strong id="deletePlate" style="color:#2c2c54"></strong>? This cannot be undone.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" onclick="closeModal('deleteModal')">Cancel</button>
+        <button class="btn-save" style="background:#e74c3c" onclick="confirmDelete()">Remove</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       APPROVE / DECLINE CONFIRM MODAL
+  ══════════════════════════════════════ -->
+  <div class="modal-overlay" id="statusModal">
+    <div class="modal-box" style="max-width:400px">
+      <div class="modal-header">
+        <h5 id="statusModalTitle">Update Status</h5>
+        <button class="modal-close" onclick="closeModal('statusModal')">×</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:14px;color:#555;margin:0" id="statusModalMessage"></p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" onclick="closeModal('statusModal')">Cancel</button>
+        <button class="btn-save" id="btnStatusConfirm" onclick="confirmStatusChange()">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="../../vendors/base/vendor.bundle.base.js"></script>
+  <script src="../../js/off-canvas.js"></script>
+  <script src="../../js/hoverable-collapse.js"></script>
+  <script src="../../js/template.js"></script>
+
+  <script>
+    // ── API base ─────────────────────────────────────────────────────────────
+    const API_BASE = '/api/motorcycles';
+
+    // ── State ────────────────────────────────────────────────────────────────
+    let motos = [];          // cached copy of what's currently in the DB
+    let editingId = null;    // string Mongo _id, or null when registering new
+    let deletingId = null;
+    let statusChangeId = null;
+    let statusChangeTarget = null; // 'Approved' | 'Declined'
+    let searchTimer = null;
+
+    // ── Fetch + render ───────────────────────────────────────────────────────
+    async function loadMotos(query = '') {
+      const tbody = document.getElementById('motoTableBody');
+      const noRes = document.getElementById('noResults');
+      tbody.innerHTML = `<tr class="loading-row"><td colspan="8">Loading motorcycles…</td></tr>`;
+      noRes.style.display = 'none';
+
+      try {
+        const url = query ? `${API_BASE}?q=${encodeURIComponent(query)}` : API_BASE;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('Failed to load motorcycles');
+        motos = await res.json();
+        renderTable();
+      } catch (err) {
+        tbody.innerHTML = '';
+        noRes.style.display = 'block';
+        showToast('Could not load motorcycles. Is the server running?', 'error');
+        console.error(err);
+      }
+    }
+
+    function onSearchInput() {
+      clearTimeout(searchTimer);
+      const q = document.getElementById('searchInput').value.trim();
+      searchTimer = setTimeout(() => loadMotos(q), 300); // debounce
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById('motoTableBody');
+      const noRes = document.getElementById('noResults');
+
+      if (motos.length === 0) {
+        tbody.innerHTML = '';
+        noRes.style.display = 'block';
+        return;
+      }
+      noRes.style.display = 'none';
+
+      const statusClass = {
+        Registered: 'badge-registered',
+        Pending: 'badge-pending',
+        Flagged: 'badge-flagged',
+        Approved: 'badge-approved',
+        Declined: 'badge-declined'
+      };
+
+      tbody.innerHTML = motos.map((m, i) => `
+        <tr>
+          <td>${i + 1}</td>
+          <td style="font-weight:600;color:#2c2c54">${escapeHtml(m.owner)}</td>
+          <td><span class="plate-tag">${escapeHtml(m.plate)}</span></td>
+          <td>${escapeHtml(m.brand)}</td>
+          <td>${escapeHtml(m.model)}</td>
+          <td>${escapeHtml(m.color) || '—'}</td>
+          <td><span class="badge-status ${statusClass[m.status] || ''}">${escapeHtml(m.status)}</span></td>
+          <td>
+            <div class="actions-cell">
+              ${renderActions(m)}
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // Pending → show Approve / Decline only.
+    // Everything else (Approved, Declined, Registered, Flagged) → show View / Edit / Remove.
+    function renderActions(m) {
+      if (m.status === 'Pending') {
+        return `
+          <button class="action-btn approve" title="Approve" onclick="promptStatusChange('${m.id}','Approved')"><i class="mdi mdi-check-circle-outline"></i></button>
+          <button class="action-btn decline" title="Decline" onclick="promptStatusChange('${m.id}','Declined')"><i class="mdi mdi-close-circle-outline"></i></button>
+        `;
+      }
+      return `
+        <button class="action-btn view" title="View"   onclick="viewMoto('${m.id}')"><i class="mdi mdi-eye"></i></button>
+        <button class="action-btn edit" title="Edit"   onclick="editMoto('${m.id}')"><i class="mdi mdi-pencil"></i></button>
+        <button class="action-btn del"  title="Remove" onclick="deleteMoto('${m.id}')"><i class="mdi mdi-trash-can-outline"></i></button>
+      `;
+    }
+
+    function escapeHtml(str) {
+      if (str === undefined || str === null) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    // ── Open register ────────────────────────────────────────────────────────
+    function openRegisterModal() {
+      editingId = null;
+      document.getElementById('modalTitle').textContent = 'Register Motorcycle';
+      clearForm();
+      openModal('addEditModal');
+    }
+
+    function clearForm() {
+      ['fOwner','fPlate','fBrand','fModel','fColor','fYear','fOrCr'].forEach(id => {
+        document.getElementById(id).value = '';
+      });
+      document.getElementById('fStatus').value = 'Registered';
+    }
+
+    // ── Save (create or update via API) ─────────────────────────────────────
+    async function saveMoto() {
+      const owner  = document.getElementById('fOwner').value.trim();
+      const plate  = document.getElementById('fPlate').value.trim().toUpperCase();
+      const brand  = document.getElementById('fBrand').value.trim();
+      const model  = document.getElementById('fModel').value.trim();
+      const color  = document.getElementById('fColor').value.trim();
+      const year   = document.getElementById('fYear').value.trim();
+      const orcr   = document.getElementById('fOrCr').value.trim();
+      const status = document.getElementById('fStatus').value;
+
+      if (!owner || !plate || !brand || !model) {
+        showToast('Please fill in all required fields.', 'error');
+        return;
+      }
+
+      const payload = { owner, plate, brand, model, color, year, orcr, status };
+      const btn = document.getElementById('btnSave');
+      btn.disabled = true;
+
+      try {
+        const url = editingId ? `${API_BASE}/${editingId}` : API_BASE;
+        const method = editingId ? 'PUT' : 'POST';
+
+        const res = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          showToast(data.error || 'Something went wrong while saving.', 'error');
+          return;
+        }
+
+        showToast(editingId ? 'Motorcycle updated.' : 'Motorcycle registered.', 'success');
+        closeModal('addEditModal');
+        await loadMotos(document.getElementById('searchInput').value.trim());
+      } catch (err) {
+        showToast('Could not reach the server.', 'error');
+        console.error(err);
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    // ── View ──────────────────────────────────────────────────────────────────
+    function viewMoto(id) {
+      const m = motos.find(x => x.id === id);
+      if (!m) return;
+      document.getElementById('vOwner').textContent = m.owner;
+      document.getElementById('vPlate').textContent = m.plate;
+      document.getElementById('vBrand').textContent = m.brand;
+      document.getElementById('vModel').textContent = m.model;
+      document.getElementById('vColor').textContent = m.color || '—';
+      document.getElementById('vYear').textContent  = m.year  || '—';
+      document.getElementById('vOrCr').textContent  = m.orcr  || '—';
+      document.getElementById('vStatus').textContent = m.status;
+      openModal('viewModal');
+    }
+
+    // ── Edit ──────────────────────────────────────────────────────────────────
+    function editMoto(id) {
+      const m = motos.find(x => x.id === id);
+      if (!m) return;
+      editingId = id;
+      document.getElementById('modalTitle').textContent = 'Edit Motorcycle';
+      document.getElementById('fOwner').value  = m.owner;
+      document.getElementById('fPlate').value  = m.plate;
+      document.getElementById('fBrand').value  = m.brand;
+      document.getElementById('fModel').value  = m.model;
+      document.getElementById('fColor').value  = m.color;
+      document.getElementById('fYear').value   = m.year;
+      document.getElementById('fOrCr').value   = m.orcr;
+      document.getElementById('fStatus').value = m.status;
+      openModal('addEditModal');
+    }
+
+    // ── Delete ─────────────────────────────────────────────────────────────────
+    function deleteMoto(id) {
+      const m = motos.find(x => x.id === id);
+      if (!m) return;
+      deletingId = id;
+      document.getElementById('deletePlate').textContent = m.plate;
+      openModal('deleteModal');
+    }
+
+    async function confirmDelete() {
+      try {
+        const res = await fetch(`${API_BASE}/${deletingId}`, { method: 'DELETE' });
+        const data = await res.json();
+
+        if (!res.ok) {
+          showToast(data.error || 'Could not remove motorcycle.', 'error');
+          return;
+        }
+
+        closeModal('deleteModal');
+        showToast('Motorcycle removed.', 'success');
+        await loadMotos(document.getElementById('searchInput').value.trim());
+      } catch (err) {
+        showToast('Could not reach the server.', 'error');
+        console.error(err);
+      }
+    }
+
+    // ── Approve / Decline ───────────────────────────────────────────────────────
+    function promptStatusChange(id, target) {
+      const m = motos.find(x => x.id === id);
+      if (!m) return;
+      statusChangeId = id;
+      statusChangeTarget = target;
+
+      const titleEl = document.getElementById('statusModalTitle');
+      const msgEl   = document.getElementById('statusModalMessage');
+      const btnEl   = document.getElementById('btnStatusConfirm');
+
+      titleEl.textContent = target === 'Approved' ? 'Approve Motorcycle' : 'Decline Motorcycle';
+      msgEl.innerHTML = `${target === 'Approved' ? 'Approve' : 'Decline'} motorcycle with plate <strong style="color:#2c2c54">${escapeHtml(m.plate)}</strong>?`;
+      btnEl.style.background = target === 'Approved' ? '#27ae60' : '#e74c3c';
+      btnEl.textContent = target === 'Approved' ? 'Approve' : 'Decline';
+
+      openModal('statusModal');
+    }
+
+    async function confirmStatusChange() {
+      const m = motos.find(x => x.id === statusChangeId);
+      if (!m) return;
+
+      const payload = {
+        owner: m.owner, plate: m.plate, brand: m.brand, model: m.model,
+        color: m.color, year: m.year, orcr: m.orcr, status: statusChangeTarget
+      };
+      const btn = document.getElementById('btnStatusConfirm');
+      btn.disabled = true;
+
+      try {
+        const res = await fetch(`${API_BASE}/${statusChangeId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          showToast(data.error || 'Could not update status.', 'error');
+          return;
+        }
+
+        closeModal('statusModal');
+        showToast(`Motorcycle ${statusChangeTarget.toLowerCase()}.`, 'success');
+        await loadMotos(document.getElementById('searchInput').value.trim());
+      } catch (err) {
+        showToast('Could not reach the server.', 'error');
+        console.error(err);
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    // ── Modal helpers ─────────────────────────────────────────────────────────
+    function openModal(id)  { document.getElementById(id).classList.add('open'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+      overlay.addEventListener('click', e => {
+        if (e.target === overlay) overlay.classList.remove('open');
+      });
+    });
+
+    // ── Toast ─────────────────────────────────────────────────────────────────
+    function showToast(msg, type = 'success') {
+      const tc   = document.getElementById('toastContainer');
+      const icon = type === 'success' ? 'mdi-check-circle' : 'mdi-alert-circle';
+      const el   = document.createElement('div');
+      el.className = `toast ${type}`;
+      el.innerHTML = `<i class="mdi ${icon}"></i> ${msg}`;
+      tc.appendChild(el);
+      setTimeout(() => el.remove(), 3000);
+    }
+
+    // ── Init ──────────────────────────────────────────────────────────────────
+    loadMotos();
+  </script>
+</body>
+</html>
