@@ -90,12 +90,17 @@ ALLOWED_STATUSES = {"Registered", "Pending", "Flagged", "Approved", "Declined"}
 # for the vehicle (see the QR Code Management page).
 ALLOWED_QR_STATUSES = {"Active", "None", "Expired"}
 
-USER_REQUIRED_FIELDS = ["fullName", "role", "idNumber", "department", "email", "contactNumber", "password"]
+# Name is split into firstName / middleName (optional) / lastName. The full
+# name is built server-side from those parts and stored as `fullName` so the
+# rest of the app (motorcycle owner, dashboards, logs) keeps working.
+# gradeLevel and section are required only for students (checked in
+# validate_user_payload), since staff/faculty don't have them.
+USER_REQUIRED_FIELDS = ["firstName", "lastName", "role", "idNumber", "email", "contactNumber", "password"]
 ALLOWED_ROLES = {"student", "staff"}
 
 # Security guard registration is a separate flow/collection from
 # student & staff registration above, since guards don't have a
-# department/year-level or an associated motorcycle.
+# grade level/section or an associated motorcycle.
 SECURITY_REQUIRED_FIELDS = ["fullName", "idNumber", "email", "contactNumber", "password"]
 
 ALLOWED_ORCR_EXTENSIONS = {"png", "jpg", "jpeg", "pdf"}
@@ -221,6 +226,13 @@ def validate_user_payload(data):
 
     if data.get("role") not in ALLOWED_ROLES:
         return "Role must be 'student' or 'staff'."
+
+    # Grade level and section only apply to students.
+    if data.get("role") == "student":
+        if not str(data.get("gradeLevel", "")).strip():
+            return "Grade level is required for students."
+        if not str(data.get("section", "")).strip():
+            return "Section is required for students."
 
     return None
 
@@ -361,7 +373,7 @@ def my_motorcycle_page():
 
 @app.route("/qrcode")
 def qrcode_page():
-  
+
     return redirect("/pages/student-dashboard/my-qrcode.html")
 
 
@@ -545,12 +557,22 @@ def register_user():
 
     email = str(data["email"]).strip().lower()
 
+    first_name = str(data["firstName"]).strip()
+    middle_name = str(data.get("middleName", "")).strip()
+    last_name = str(data["lastName"]).strip()
+    # Build the display name from the parts so it can't drift out of sync.
+    full_name = " ".join(p for p in (first_name, middle_name, last_name) if p)
+    is_student = data["role"] == "student"
+
     user_doc = {
-        "fullName": str(data["fullName"]).strip(),
+        "firstName": first_name,
+        "middleName": middle_name,
+        "lastName": last_name,
+        "fullName": full_name,
         "role": data["role"],
         "idNumber": str(data["idNumber"]).strip(),
-        "department": str(data["department"]).strip(),
-        "yearLevel": str(data.get("yearLevel", "")).strip(),
+        "gradeLevel": str(data.get("gradeLevel", "")).strip() if is_student else "",
+        "section": str(data.get("section", "")).strip() if is_student else "",
         "approval_status": "Pending",
         "email": email,
         "contactNumber": str(data["contactNumber"]).strip(),
@@ -655,7 +677,7 @@ def register_security_guard():
     """Register a new security guard account.
 
     Kept separate from /api/register (students/staff) because guards don't
-    have a department/year-level or a motorcycle to attach, and they live in
+    have a grade level/section or a motorcycle to attach, and they live in
     their own collection so gate-side auth stays independent of the student
     system.
     """
@@ -1173,7 +1195,9 @@ def reports_summary():
     Returns daily entries/exits/denied-scan counts over the range, a
     24-hour scan-volume histogram over the range, an hour-by-hour "vehicles
     inside campus" snapshot for *today* (always today, regardless of
-    'days'), and a registration-status breakdown across all motorcycles.
+    'days'), a registration-status breakdown across all motorcycles, and a
+    detailed 'records' list (date / owner / plate / brand / model / time in /
+    time out) for the latest 1,000 entries in the range.
     """
     try:
         days = max(1, min(365, int(request.args.get("days", 30))))
@@ -1245,6 +1269,43 @@ def reports_summary():
     pending = motorcycles.count_documents({"status": "Pending"})
     flagged = motorcycles.count_documents({"status": {"$in": ["Flagged", "Declined"]}})
 
+    # ── Detailed records: owner / brand / model per entry in range ──────────
+    log_docs = list(
+        entry_exit_logs.find({"entry_time": {"$gte": range_start_utc}})
+        .sort("entry_time", -1)
+        .limit(1000)
+    )
+    record_plates = list({d.get("plate", "") for d in log_docs if d.get("plate")})
+    moto_map = {
+        m["plate"]: m
+        for m in motorcycles.find(
+            {"plate": {"$in": record_plates}},
+            {"plate": 1, "owner": 1, "brand": 1, "model": 1},
+        )
+    }
+    owner_oids = [to_object_id(d.get("owner_id")) for d in log_docs if d.get("owner_id")]
+    owner_oids = [o for o in owner_oids if o is not None]
+    owner_names = {
+        str(u["_id"]): u.get("fullName", "")
+        for u in users.find({"_id": {"$in": owner_oids}}, {"fullName": 1})
+    }
+
+    records = []
+    for d in log_docs:
+        plate = d.get("plate", "")
+        moto = moto_map.get(plate, {})
+        entry_local = _to_local(d["entry_time"]) if d.get("entry_time") else None
+        exit_local = _to_local(d["exit_time"]) if d.get("exit_time") else None
+        records.append({
+            "date": entry_local.strftime("%b %d, %Y") if entry_local else "",
+            "owner": owner_names.get(d.get("owner_id")) or moto.get("owner", "Unknown"),
+            "plate": plate,
+            "brand": moto.get("brand", ""),
+            "model": moto.get("model", ""),
+            "time_in": entry_local.strftime("%I:%M %p").lstrip("0") if entry_local else "—",
+            "time_out": exit_local.strftime("%I:%M %p").lstrip("0") if exit_local else "—",
+        })
+
     return jsonify({
         "days": days,
         "day_labels": day_labels,
@@ -1256,6 +1317,7 @@ def reports_summary():
         "inside_hour_labels": inside_hour_labels,
         "inside_counts": inside_counts,
         "registration_status": {"active": active, "pending": pending, "flagged": flagged},
+        "records": records,
     })
 
 
@@ -1307,12 +1369,15 @@ def _admin_row(doc, kind):
         "id": str(doc["_id"]),
         "kind": kind,  # "user" (student/staff) or "guard" (security)
         "fullName": doc.get("fullName", ""),
+        "firstName": doc.get("firstName", ""),
+        "middleName": doc.get("middleName", ""),
+        "lastName": doc.get("lastName", ""),
         "role": "security" if kind == "guard" else doc.get("role", ""),
         "idNumber": doc.get("idNumber", ""),
         "email": doc.get("email", ""),
         "contactNumber": doc.get("contactNumber", ""),
-        "department": doc.get("department", ""),
-        "yearLevel": doc.get("yearLevel", ""),
+        "gradeLevel": doc.get("gradeLevel", ""),
+        "section": doc.get("section", ""),
         "assignedPost": doc.get("assignedPost", ""),
         "approval_status": doc.get("approval_status", "Approved"),
         "created_at": _iso_utc(doc.get("created_at")),
