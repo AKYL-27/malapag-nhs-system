@@ -64,18 +64,33 @@
               </div>
               <div class="role-option" data-role="staff">
                 <i class="ti ti-briefcase" aria-hidden="true"></i>
-                <span>Staff / Faculty</span>
+                <span>Teacher</span>
               </div>
             </div>
           </div>
 
+          <div class="form-row-2">
+            <div class="form-group">
+              <label class="form-label" for="firstName">First Name <span class="req">*</span></label>
+              <div class="form-input-wrap">
+                <i class="ti ti-user form-input-icon" aria-hidden="true"></i>
+                <input type="text" id="firstName" class="form-input with-icon" placeholder="e.g. Maria Angela" autocomplete="given-name"/>
+              </div>
+              <div class="form-error" id="err-firstName"><i class="ti ti-alert-circle" aria-hidden="true"></i> Please enter your first name.</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="middleName">Middle Name</label>
+              <input type="text" id="middleName" class="form-input" placeholder="Optional" autocomplete="additional-name"/>
+            </div>
+          </div>
+
           <div class="form-group">
-            <label class="form-label" for="fullName">Full Name <span class="req">*</span></label>
+            <label class="form-label" for="lastName">Last Name <span class="req">*</span></label>
             <div class="form-input-wrap">
               <i class="ti ti-user form-input-icon" aria-hidden="true"></i>
-              <input type="text" id="fullName" class="form-input with-icon" placeholder="e.g. Maria Angela Santos" autocomplete="name"/>
+              <input type="text" id="lastName" class="form-input with-icon" placeholder="e.g. Santos" autocomplete="family-name"/>
             </div>
-            <div class="form-error" id="err-fullName"><i class="ti ti-alert-circle" aria-hidden="true"></i> Please enter your full name.</div>
+            <div class="form-error" id="err-lastName"><i class="ti ti-alert-circle" aria-hidden="true"></i> Please enter your last name.</div>
           </div>
 
           <div class="form-group">
@@ -87,34 +102,25 @@
             <div class="form-error" id="err-idNumber"><i class="ti ti-alert-circle" aria-hidden="true"></i> Please enter your ID number.</div>
           </div>
 
-          <div class="form-row-2">
+          <!-- Students only -->
+          <div class="form-row-2" id="gradeSectionRow">
             <div class="form-group">
-              <label class="form-label" for="department">Department / Course <span class="req">*</span></label>
-              <select id="department" class="form-select">
+              <label class="form-label" for="gradeLevel">Grade Level <span class="req">*</span></label>
+              <select id="gradeLevel" class="form-select">
                 <option value="">Select...</option>
-                <option>BS Information Technology</option>
-                <option>BS Computer Science</option>
-                <option>BS Accountancy</option>
-                <option>BS Education</option>
-                <option>BS Engineering</option>
-                <option>College of Nursing</option>
-                <option>Admin Office</option>
-                <option>Engineering Department</option>
-                <option>Other</option>
+                <option>Grade 7</option>
+                <option>Grade 8</option>
+                <option>Grade 9</option>
+                <option>Grade 10</option>
+                <option>Grade 11</option>
+                <option>Grade 12</option>
               </select>
-              <div class="form-error" id="err-department"><i class="ti ti-alert-circle" aria-hidden="true"></i> Please select your department or course.</div>
+              <div class="form-error" id="err-gradeLevel"><i class="ti ti-alert-circle" aria-hidden="true"></i> Please select your grade level.</div>
             </div>
-            <div class="form-group" id="yearLevelGroup">
-              <label class="form-label" for="yearLevel">Year Level <span class="req">*</span></label>
-              <select id="yearLevel" class="form-select">
-                <option value="">Select...</option>
-                <option>1st Year</option>
-                <option>2nd Year</option>
-                <option>3rd Year</option>
-                <option>4th Year</option>
-                <option>5th Year</option>
-              </select>
-              <div class="form-error" id="err-yearLevel"><i class="ti ti-alert-circle" aria-hidden="true"></i> Please select your year level.</div>
+            <div class="form-group">
+              <label class="form-label" for="section">Section <span class="req">*</span></label>
+              <input type="text" id="section" class="form-input" placeholder="e.g. Sampaguita"/>
+              <div class="form-error" id="err-section"><i class="ti ti-alert-circle" aria-hidden="true"></i> Please enter your section.</div>
             </div>
           </div>
 
@@ -200,7 +206,7 @@
             <div class="form-row-2">
               <div class="form-group">
                 <label class="form-label" for="motoBrand">Motorcycle Brand <span class="req">*</span></label>
-                <select id="motoBrand" class="form-select">
+                <select id="motoBrand" class="form-select" onchange="updateModelOptions()">
                   <option value="">Select...</option>
                   <option>Honda</option>
                   <option>Yamaha</option>
@@ -213,8 +219,16 @@
               </div>
               <div class="form-group">
                 <label class="form-label" for="motoModel">Model <span class="req">*</span></label>
-                <input type="text" id="motoModel" class="form-input" placeholder="e.g. Click 125i"/>
-                <div class="form-error" id="err-motoModel"><i class="ti ti-alert-circle" aria-hidden="true"></i> Please enter the model.</div>
+                <select id="motoModel" class="form-select" onchange="updateModelOther()" disabled>
+                  <option value="">Select brand first...</option>
+                </select>
+                <div class="form-error" id="err-motoModel"><i class="ti ti-alert-circle" aria-hidden="true"></i> Please select a model.</div>
+
+                <!-- Shown when "Other" model is chosen, or brand is "Other" -->
+                <div class="form-group" id="motoModelOtherGroup" style="display:none;margin:10px 0 0;">
+                  <input type="text" id="motoModelOther" class="form-input" placeholder="Specify your model"/>
+                  <div class="form-error" id="err-motoModelOther"><i class="ti ti-alert-circle" aria-hidden="true"></i> Please enter your motorcycle model.</div>
+                </div>
               </div>
             </div>
 
@@ -282,6 +296,16 @@ let currentStep=1;
 let selectedRole='student';
 let selectedOrcrFile=null; // holds the raw File object for the OR/CR upload
 
+// ── MOTORCYCLE MODELS BY BRAND ───────────────────────────────
+// Edit these lists to add or remove models. "Other" is appended automatically.
+const MOTO_MODELS={
+  Honda:['Beat','Click 125i','Click 160','Airblade 160','PCX 160','ADV 160','XRM 125','TMX 125 Alpha','Wave RSX','RS125','Winner X','CB150X'],
+  Yamaha:['Mio i 125','Mio Sporty','Mio Gear','Mio Gravis','Fazzio','Aerox 155','NMAX 155','Sniper 155','Sight 115','YTX 125','FZi'],
+  Suzuki:['Smash 115','Skydrive Sport 115','Address 110','Burgman Street 125EX','Raider J Crossover','Raider R150 Fi','Gixxer 150'],
+  Kawasaki:['CT100','CT150','Barako II','Barako 175','Rouser NS160','Rouser NS200','Ninja 400','Ninja 650'],
+  Kymco:['Like 125','Like 150i','Agility 125','Xciting S400']
+};
+
 // ── ROLE TOGGLE ──────────────────────────────────────────────
 document.querySelectorAll('.role-option').forEach(opt=>{
   opt.addEventListener('click',()=>{
@@ -295,15 +319,15 @@ document.querySelectorAll('.role-option').forEach(opt=>{
 function updateRoleLabels(){
   const idLabel=document.getElementById('idNumberLabel');
   const idInput=document.getElementById('idNumber');
-  const yearGroup=document.getElementById('yearLevelGroup');
+  const gradeRow=document.getElementById('gradeSectionRow');
   if(selectedRole==='staff'){
     idLabel.innerHTML='Employee ID <span class="req">*</span>';
     idInput.placeholder='e.g. EMP-2024-0089';
-    yearGroup.style.display='none';
+    gradeRow.style.display='none';
   }else{
     idLabel.innerHTML='Student ID <span class="req">*</span>';
     idInput.placeholder='e.g. 2021-0457';
-    yearGroup.style.display='block';
+    gradeRow.style.display='';
   }
 }
 
@@ -336,17 +360,19 @@ function setError(fieldId,isError){
 
 function validateStep1(){
   let valid=true;
-  const fullName=document.getElementById('fullName').value.trim();
+  const firstName=document.getElementById('firstName').value.trim();
+  const lastName=document.getElementById('lastName').value.trim();
   const idNumber=document.getElementById('idNumber').value.trim();
-  const department=document.getElementById('department').value;
-  const yearLevel=document.getElementById('yearLevel').value;
 
-  setError('fullName', fullName.length<2); if(fullName.length<2) valid=false;
+  setError('firstName', firstName.length<2); if(firstName.length<2) valid=false;
+  setError('lastName', lastName.length<2); if(lastName.length<2) valid=false;
   setError('idNumber', idNumber.length<3); if(idNumber.length<3) valid=false;
-  setError('department', department===''); if(department==='') valid=false;
 
   if(selectedRole==='student'){
-    setError('yearLevel', yearLevel===''); if(yearLevel==='') valid=false;
+    const gradeLevel=document.getElementById('gradeLevel').value;
+    const section=document.getElementById('section').value.trim();
+    setError('gradeLevel', gradeLevel===''); if(gradeLevel==='') valid=false;
+    setError('section', section.length<1); if(section.length<1) valid=false;
   }
   return valid;
 }
@@ -403,6 +429,56 @@ function toggleMotoFields(){
   document.getElementById('motoFields').style.display=checked?'block':'none';
 }
 
+// Rebuild the Model dropdown whenever the Brand changes
+function updateModelOptions(){
+  const brand=document.getElementById('motoBrand').value;
+  const modelSel=document.getElementById('motoModel');
+  const otherGroup=document.getElementById('motoModelOtherGroup');
+  const otherInput=document.getElementById('motoModelOther');
+
+  setError('motoModel', false);
+  setError('motoModelOther', false);
+  otherInput.value='';
+  modelSel.innerHTML='';
+
+  if(brand===''){
+    modelSel.innerHTML='<option value="">Select brand first...</option>';
+    modelSel.disabled=true;
+    modelSel.style.display='';
+    otherGroup.style.display='none';
+    return;
+  }
+
+  // Brand "Other" has no preset models, so go straight to a text input
+  if(brand==='Other'){
+    modelSel.innerHTML='<option value="Other" selected>Other</option>';
+    modelSel.disabled=true;
+    modelSel.style.display='none';
+    otherGroup.style.display='block';
+    return;
+  }
+
+  modelSel.style.display='';
+  modelSel.disabled=false;
+  const models=(MOTO_MODELS[brand]||[]).concat('Other');
+  modelSel.appendChild(new Option('Select...',''));
+  models.forEach(m=>modelSel.appendChild(new Option(m==='Other'?'Other (specify)':m,m)));
+  otherGroup.style.display='none';
+}
+
+// Show the text box only when "Other" model is picked
+function updateModelOther(){
+  const isOther=document.getElementById('motoModel').value==='Other';
+  document.getElementById('motoModelOtherGroup').style.display=isOther?'block':'none';
+  if(!isOther){ document.getElementById('motoModelOther').value=''; setError('motoModelOther', false); }
+}
+
+// Returns the final model name (dropdown value, or typed text for "Other")
+function getMotoModel(){
+  const sel=document.getElementById('motoModel').value;
+  return sel==='Other' ? document.getElementById('motoModelOther').value.trim() : sel;
+}
+
 function handleFileUpload(input){
   const box=document.getElementById('fileUploadBox');
   if(input.files && input.files[0]){
@@ -436,12 +512,21 @@ function validateStep3(){
 
   if(hasMoto){
     const brand=document.getElementById('motoBrand').value;
-    const model=document.getElementById('motoModel').value.trim();
+    const modelSel=document.getElementById('motoModel').value;
     const color=document.getElementById('motoColor').value.trim();
     const plate=document.getElementById('plateNumber').value.trim();
 
     setError('motoBrand', brand===''); if(brand==='') valid=false;
-    setError('motoModel', model.length<2); if(model.length<2) valid=false;
+
+    // Model: dropdown must be chosen; if "Other", the text box must be filled
+    const needsDropdown = brand!=='Other';
+    const dropdownBad = needsDropdown && modelSel==='';
+    setError('motoModel', dropdownBad); if(dropdownBad) valid=false;
+
+    const needsOther = brand==='Other' || modelSel==='Other';
+    const otherBad = needsOther && document.getElementById('motoModelOther').value.trim().length<2;
+    setError('motoModelOther', otherBad); if(otherBad) valid=false;
+
     setError('motoColor', color.length<2); if(color.length<2) valid=false;
     setError('plateNumber', plate.length<4); if(plate.length<4) valid=false;
   }
@@ -466,12 +551,20 @@ async function submitRegistration(){
   submitBtn.disabled = true;
   submitBtn.innerHTML = '<i class="ti ti-loader-2" aria-hidden="true"></i> Submitting...';
 
+  const firstName=document.getElementById('firstName').value.trim();
+  const middleName=document.getElementById('middleName').value.trim();
+  const lastName=document.getElementById('lastName').value.trim();
+
   const payload = {
-    fullName: document.getElementById('fullName').value.trim(),
+    firstName,
+    middleName,
+    lastName,
+    // Combined name kept for any backend code that still expects "fullName"
+    fullName: [firstName, middleName, lastName].filter(Boolean).join(' '),
     role: selectedRole,
     idNumber: document.getElementById('idNumber').value.trim(),
-    department: document.getElementById('department').value,
-    yearLevel: selectedRole === 'student' ? document.getElementById('yearLevel').value : '',
+    gradeLevel: selectedRole === 'student' ? document.getElementById('gradeLevel').value : '',
+    section: selectedRole === 'student' ? document.getElementById('section').value.trim() : '',
     email: document.getElementById('email').value.trim(),
     contactNumber: document.getElementById('contactNumber').value.trim(),
     password: document.getElementById('password').value,
@@ -480,7 +573,7 @@ async function submitRegistration(){
   if(hasMoto){
     payload.motorcycle = {
       brand: document.getElementById('motoBrand').value,
-      model: document.getElementById('motoModel').value.trim(),
+      model: getMotoModel(),
       color: document.getElementById('motoColor').value.trim(),
       plate: document.getElementById('plateNumber').value.trim(),
     };
