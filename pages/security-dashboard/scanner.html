@@ -79,6 +79,13 @@
 
         <div>
           <div style="font-size:12px;font-weight:500;color:var(--text-muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:.4px;">Scan Result</div>
+
+          <!-- Shown only when the scanned motorcycle is reported stolen -->
+          <div id="stolenAlert" role="alert" style="display:none;background:#b3261e;color:#fff;border-radius:10px;padding:14px 16px;margin-bottom:12px;font-weight:600;">
+            <div style="font-size:15px;"><i class="ti ti-alert-octagon" aria-hidden="true"></i> REPORTED STOLEN</div>
+            <div style="font-size:13px;font-weight:400;margin-top:4px;">Do not release this motorcycle. Hold the vehicle and contact the security office.</div>
+          </div>
+
           <div class="result-card">
             <div class="result-header">
               <div class="result-avatar" id="resultAvatar">—</div>
@@ -164,6 +171,31 @@ function showToast(msg, isError) {
   }, 3500);
 }
 
+// Audible / tactile warning so a guard looking at the vehicle (not the
+// screen) still notices a stolen-bike scan. Both are best-effort: vibrate()
+// isn't supported on every device and audio needs a prior user gesture
+// (the Start Camera click counts).
+function stolenWarning() {
+  try { if (navigator.vibrate) navigator.vibrate([300, 100, 300, 100, 300]); } catch (_) {}
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    const actx = new AC();
+    [0, 0.35].forEach(offset => {
+      const osc = actx.createOscillator();
+      const gain = actx.createGain();
+      osc.type = 'square';
+      osc.frequency.value = 880;
+      gain.gain.value = 0.15;
+      osc.connect(gain);
+      gain.connect(actx.destination);
+      osc.start(actx.currentTime + offset);
+      osc.stop(actx.currentTime + offset + 0.25);
+    });
+    setTimeout(() => actx.close(), 1200);
+  } catch (_) {}
+}
+
 // ── STATE ────────────────────────────────────────────────────
 let stream = null;
 let scanning = false;
@@ -171,7 +203,7 @@ let facingMode = 'environment';
 let lastCode = '';
 let lastCodeAt = 0;
 let lookupBusy = false;
-let current = null; // { motorcycle, owner, inside } for the displayed scan
+let current = null; // { motorcycle, owner, inside, stolen } for the displayed scan
 
 const video = document.getElementById('videoEl');
 const canvas = document.createElement('canvas');
@@ -179,8 +211,11 @@ const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
 const STATUS_STYLES = {
   Registered: { text: 'Verified',         bg: '#d1fae5', color: '#065f46' },
+  Approved:   { text: 'Verified',         bg: '#d1fae5', color: '#065f46' },
   Pending:    { text: 'Pending approval', bg: '#fef3c7', color: '#92400e' },
   Flagged:    { text: 'Flagged',          bg: '#fee2e2', color: '#991b1b' },
+  Declined:   { text: 'Declined',         bg: '#fee2e2', color: '#991b1b' },
+  Stolen:     { text: 'STOLEN',           bg: '#b3261e', color: '#ffffff' },
 };
 
 // ── CAMERA ───────────────────────────────────────────────────
@@ -284,7 +319,7 @@ async function handleCode(data) {
   }
 }
 
-function renderResult(r) {
+function renderResult(r, quiet) {
   const m = r.motorcycle;
   const status = STATUS_STYLES[m.status] || { text: m.status || 'Unknown', bg: '#e2e8f0', color: '#334155' };
 
@@ -304,11 +339,21 @@ function renderResult(r) {
   badge.style.background = status.bg;
   badge.style.color = status.color;
 
-  // Exit if they're inside; entry only if approved and currently outside.
-  document.getElementById('btnEntry').disabled = r.inside || m.status !== 'Registered';
-  document.getElementById('btnExit').disabled = !r.inside;
+  const stolen = r.stolen === true || m.status === 'Stolen';
+  document.getElementById('stolenAlert').style.display = stolen ? 'block' : 'none';
 
-  if (!r.inside && m.status !== 'Registered') {
+  const canEnter = m.status === 'Registered' || m.status === 'Approved';
+  // Stolen: both buttons stay disabled. The guard must hold the vehicle, not release it.
+  document.getElementById('btnEntry').disabled = stolen || r.inside || !canEnter;
+  document.getElementById('btnExit').disabled = stolen || !r.inside;
+
+  // `quiet` is used when restoring the UI after a failed confirm, so the
+  // warning doesn't fire a second time.
+  if (quiet) return;
+  if (stolen) {
+    showToast('ALERT: reported stolen. Hold the vehicle.', true);
+    stolenWarning();
+  } else if (!r.inside && !canEnter) {
     showToast('Entry not allowed: motorcycle is ' + status.text.toLowerCase() + '.', true);
   }
 }
@@ -327,6 +372,7 @@ function resetResult() {
   badge.style.color = '';
   document.getElementById('btnEntry').disabled = true;
   document.getElementById('btnExit').disabled = true;
+  document.getElementById('stolenAlert').style.display = 'none';
 }
 
 // ── CONFIRM ENTRY / EXIT ─────────────────────────────────────
@@ -347,8 +393,17 @@ async function confirmAction(action) {
     const result = await res.json().catch(() => ({}));
 
     if (!res.ok) {
+      // The bike may have been reported stolen between the scan and the tap.
+      if (result.stolen) {
+        current.stolen = true;
+        current.motorcycle.status = 'Stolen';
+        showToast(result.error || 'ALERT: reported stolen. Hold the vehicle.', true);
+        stolenWarning();
+        renderResult(current, true);
+        return;
+      }
       showToast(result.error || 'Something went wrong. Please try again.', true);
-      renderResult(current); // restore the right buttons
+      renderResult(current, true); // restore the right buttons
       return;
     }
 
@@ -361,7 +416,7 @@ async function confirmAction(action) {
     lastCode = ''; // allow re-scanning the same code right away
   } catch (_) {
     showToast('Could not reach the server.', true);
-    renderResult(current);
+    renderResult(current, true);
   }
 }
 
