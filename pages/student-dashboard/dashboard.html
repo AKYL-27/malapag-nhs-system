@@ -8,6 +8,34 @@
 <link rel="stylesheet" href="styles.css"/>
   <link rel="shortcut icon" href="../../images/mini-logo.png" />
 
+<style>
+  .theft-alert{display:none;align-items:flex-start;gap:12px;background:#fdecea;border:1px solid #f5c2c0;
+    color:#a12622;border-radius:12px;padding:14px 16px;margin-bottom:20px;}
+  .theft-alert i{font-size:22px;margin-top:2px;}
+  .theft-alert strong{display:block;margin-bottom:2px;}
+  .btn-danger{background:#d93025;color:#fff;border:none;cursor:pointer;}
+  .btn-danger:hover{background:#b3261e;}
+  .btn-danger:disabled{opacity:.6;cursor:not-allowed;}
+  .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;
+    justify-content:center;z-index:1000;padding:16px;}
+  .modal-backdrop.open{display:flex;}
+  .modal-box{background:#fff;border-radius:14px;width:100%;max-width:480px;max-height:90vh;overflow:auto;padding:22px;}
+  .modal-box h3{margin:0 0 4px;font-size:18px;}
+  .modal-box .modal-sub{color:var(--text-hint,#888);font-size:13px;margin:0 0 16px;}
+  .form-group{margin-bottom:14px;}
+  .form-group label{display:block;font-size:13px;font-weight:600;margin-bottom:5px;}
+  .form-group input,.form-group select,.form-group textarea{width:100%;padding:9px 11px;border:1px solid #d5d9e0;
+    border-radius:8px;font:inherit;box-sizing:border-box;}
+  .form-error{color:#d93025;font-size:13px;min-height:18px;margin-bottom:8px;}
+  .modal-actions{display:flex;justify-content:flex-end;gap:8px;}
+  .toast{position:fixed;bottom:24px;right:24px;z-index:1100;max-width:340px;display:flex;align-items:flex-start;gap:10px;
+    background:#0f5132;color:#fff;padding:14px 16px;border-radius:10px;font-size:14px;line-height:1.4;
+    box-shadow:0 4px 20px rgba(0,0,0,.25);transform:translateY(100px);opacity:0;transition:all .3s;pointer-events:none;}
+  .toast.show{transform:translateY(0);opacity:1;}
+  .toast.error{background:#991b1b;}
+  .toast i{font-size:20px;margin-top:1px;}
+</style>
+
 </head>
 <body>
 <h1 class="sr-only">Student and Staff Dashboard — Motorcycle Monitoring System</h1>
@@ -43,6 +71,15 @@
   </header>
 
   <div class="content">
+
+    <!-- Theft alert (shown only while a report is Open / Investigating) -->
+    <div class="theft-alert" id="theftAlert" role="alert">
+      <i class="ti ti-alert-triangle" aria-hidden="true"></i>
+      <div>
+        <strong id="theftAlertTitle">Motorcycle reported stolen</strong>
+        <span id="theftAlertBody"></span>
+      </div>
+    </div>
 
     <div class="welcome-banner">
       <div>
@@ -107,16 +144,64 @@
     <div class="btn-row">
       <a class="btn btn-primary" href="my-qrcode.html"><i class="ti ti-qrcode" aria-hidden="true"></i> View My QR Code</a>
       <a class="btn btn-secondary" href="my-motorcycle.html"><i class="ti ti-motorbike" aria-hidden="true"></i> My Motorcycle Info</a>
+      <button class="btn btn-danger" id="openTheftBtn" type="button">
+        <i class="ti ti-alert-octagon" aria-hidden="true"></i> Report Stolen
+      </button>
     </div>
 
   </div>
 </main>
+
+<!-- Theft report modal -->
+<div class="modal-backdrop" id="theftModal">
+  <div class="modal-box" role="dialog" aria-labelledby="theftModalTitle">
+    <h3 id="theftModalTitle">Report a stolen motorcycle</h3>
+    <p class="modal-sub">Filing a report blocks this motorcycle's QR code at the gate right away.</p>
+
+    <div class="form-group">
+      <label for="theftMoto">Motorcycle</label>
+      <select id="theftMoto"></select>
+    </div>
+    <div class="form-group">
+      <label for="theftLastSeenAt">When was it last seen?</label>
+      <input type="datetime-local" id="theftLastSeenAt"/>
+    </div>
+    <div class="form-group">
+      <label for="theftLocation">Where was it last seen?</label>
+      <input type="text" id="theftLocation" maxlength="200" placeholder="e.g. Parking area near Gate 2"/>
+    </div>
+    <div class="form-group">
+      <label for="theftDescription">What happened?</label>
+      <textarea id="theftDescription" rows="4" maxlength="1000"
+        placeholder="Describe the incident and any identifying details (stickers, damage, etc.)"></textarea>
+    </div>
+    <div class="form-group">
+      <label for="theftPolice">Police report number <span style="font-weight:400;color:#888;">(optional)</span></label>
+      <input type="text" id="theftPolice" maxlength="50"/>
+    </div>
+
+    <div class="form-error" id="theftError"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" type="button" id="theftCancelBtn">Cancel</button>
+      <button class="btn btn-danger" type="button" id="theftSubmitBtn">Submit Report</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast notification -->
+<div class="toast" id="toast" role="status" aria-live="polite">
+  <i class="ti ti-circle-check" id="toastIcon" aria-hidden="true"></i>
+  <span id="toastMsg"></span>
+</div>
 
 <script src="sidebar.js"></script>
 <script src="app.js"></script>
 <script>renderSidebar('dashboard');</script>
 
 <script>
+let currentUser = null;
+let userMotorcycles = [];
+
 function getInitials(name){
   if(!name) return '--';
   const parts=name.trim().split(/\s+/);
@@ -196,6 +281,120 @@ async function loadRecentActivity(userId){
   }
 }
 
+// ── Toast ────────────────────────────────────────────────────────────────────
+let toastTimer = null;
+function showToast(msg, isError, ms){
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  document.getElementById('toastIcon').className = 'ti ' + (isError ? 'ti-alert-circle' : 'ti-circle-check');
+  t.classList.toggle('error', !!isError);
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), ms || 6000);
+}
+
+// ── Theft report ─────────────────────────────────────────────────────────────
+function openTheftModal(){
+  const select = document.getElementById('theftMoto');
+  // Only bikes that aren't already reported stolen can be reported.
+  const eligible = userMotorcycles.filter(m => m.status !== 'Stolen');
+  if (!eligible.length){
+    alert(userMotorcycles.length
+      ? 'Your motorcycle is already reported stolen.'
+      : 'You have no registered motorcycle to report.');
+    return;
+  }
+  select.innerHTML = eligible.map(m =>
+    `<option value="${escapeHtml(m.id)}">${escapeHtml(m.plate)} — ${escapeHtml((m.brand||'')+' '+(m.model||''))}</option>`
+  ).join('');
+
+  // Can't report a last-seen time in the future.
+  const now = new Date();
+  now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+  const nowStr = now.toISOString().slice(0,16);
+  const dt = document.getElementById('theftLastSeenAt');
+  dt.max = nowStr;
+  dt.value = nowStr;
+
+  document.getElementById('theftLocation').value = '';
+  document.getElementById('theftDescription').value = '';
+  document.getElementById('theftPolice').value = '';
+  document.getElementById('theftError').textContent = '';
+  document.getElementById('theftModal').classList.add('open');
+}
+
+function closeTheftModal(){
+  document.getElementById('theftModal').classList.remove('open');
+}
+
+async function submitTheftReport(){
+  const errEl = document.getElementById('theftError');
+  const btn = document.getElementById('theftSubmitBtn');
+  errEl.textContent = '';
+
+  const payload = {
+    owner_id: currentUser.id,
+    motorcycle_id: document.getElementById('theftMoto').value,
+    last_seen_at: document.getElementById('theftLastSeenAt').value,
+    last_seen_location: document.getElementById('theftLocation').value.trim(),
+    description: document.getElementById('theftDescription').value.trim(),
+    police_report_no: document.getElementById('theftPolice').value.trim()
+  };
+  if (!payload.last_seen_location || !payload.description){
+    errEl.textContent = 'Please say where it was last seen and describe what happened.';
+    return;
+  }
+  if (!confirm('Submit this theft report? Your motorcycle will be blocked at the gate until the report is resolved.')) return;
+
+  btn.disabled = true;
+  btn.textContent = 'Submitting…';
+  try {
+    const res = await fetch('/api/theft-reports', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
+    closeTheftModal();
+    showToast(`Theft report submitted for ${data.plate || 'your motorcycle'}. Your motorcycle is now blocked at the gate, and the report is visible to the admin.`);
+    await loadDashboard();   // refresh status pill + banner
+    document.getElementById('theftAlert').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  } catch (err) {
+    errEl.textContent = err.message;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Submit Report';
+  }
+}
+
+// Shows the red banner if the user has an Open / Investigating report.
+async function loadTheftStatus(userId){
+  const banner = document.getElementById('theftAlert');
+  try {
+    const res = await fetch(`/api/theft-reports?owner_id=${encodeURIComponent(userId)}`);
+    if (!res.ok) return;
+    const reports = await res.json();
+    const active = reports.filter(r => r.status === 'Open' || r.status === 'Investigating');
+    if (!active.length){ banner.style.display = 'none'; return; }
+
+    const r = active[0];
+    document.getElementById('theftAlertTitle').textContent =
+      `${r.plate} is reported stolen (${r.status})`;
+    document.getElementById('theftAlertBody').textContent =
+      ' Its QR code is blocked at the gate. If you get it back, contact the security office so the report can be closed.';
+    banner.style.display = 'flex';
+  } catch (e) { /* non-critical */ }
+}
+
+document.getElementById('openTheftBtn').addEventListener('click', openTheftModal);
+document.getElementById('theftCancelBtn').addEventListener('click', closeTheftModal);
+document.getElementById('theftSubmitBtn').addEventListener('click', submitTheftReport);
+document.getElementById('theftModal').addEventListener('click', e => {
+  if (e.target.id === 'theftModal') closeTheftModal();
+});
+
+// ── Dashboard load ───────────────────────────────────────────────────────────
 async function loadDashboard(){
   const raw = sessionStorage.getItem('motoUser') || localStorage.getItem('motoUser');
   if(!raw){
@@ -210,6 +409,7 @@ async function loadDashboard(){
     window.location.href='/login';
     return;
   }
+  currentUser = user;
 
   // Populate profile / header immediately from the stored login response.
   const initials=getInitials(user.fullName);
@@ -230,8 +430,9 @@ async function loadDashboard(){
   // Fetch this user's motorcycle, if any.
   try {
     const res=await fetch(`/api/motorcycles?owner_id=${encodeURIComponent(user.id)}`);
-    const motorcycles=await res.json();
-    const moto = Array.isArray(motorcycles) && motorcycles.length>0 ? motorcycles[0] : null;
+    const motorcycles = await res.json();
+    userMotorcycles = Array.isArray(motorcycles) ? motorcycles : [];
+    const moto = userMotorcycles.length>0 ? userMotorcycles[0] : null;
 
     const motoStatusPill=document.getElementById('motoStatusPill');
     const qrStatusPill=document.getElementById('qrStatusPill');
@@ -241,14 +442,16 @@ async function loadDashboard(){
       document.getElementById('motoPlate').textContent = moto.plate || '—';
 
       const status = moto.status || 'Pending';
-      motoStatusPill.className = 'status-pill ' + (status==='Registered' ? 'status-active' : status==='Flagged' ? 'status-flagged' : 'status-pending');
-      motoStatusPill.innerHTML = `<i class="ti ti-circle-check" style="font-size:12px;" aria-hidden="true"></i> ${status}`;
+      const isGood = status === 'Registered' || status === 'Approved';
+      const isBad  = status === 'Flagged' || status === 'Stolen' || status === 'Declined';
+      motoStatusPill.className = 'status-pill ' + (isGood ? 'status-active' : isBad ? 'status-flagged' : 'status-pending');
+      motoStatusPill.innerHTML = `<i class="ti ti-circle-check" style="font-size:12px;" aria-hidden="true"></i> ${escapeHtml(status)}`;
 
       // No QR-code system is wired up yet on the backend, so this mirrors
       // the motorcycle's own status as a placeholder rather than claiming a
       // QR code exists.
-      qrStatusPill.className = 'status-pill ' + (status==='Registered' ? 'status-active' : 'status-pending');
-      qrStatusPill.textContent = status==='Registered' ? 'Active' : 'Pending';
+      qrStatusPill.className = 'status-pill ' + (isGood ? 'status-active' : isBad ? 'status-flagged' : 'status-pending');
+      qrStatusPill.textContent = isGood ? 'Active' : status === 'Stolen' ? 'Blocked' : 'Pending';
     } else {
       document.getElementById('motoValue').textContent = 'No motorcycle on file';
       document.getElementById('motoPlate').textContent = '—';
@@ -262,6 +465,7 @@ async function loadDashboard(){
   }
 
   loadRecentActivity(user.id);
+  loadTheftStatus(user.id);
 }
 
 loadDashboard();
