@@ -140,6 +140,147 @@
           </div>
 
 
+          <!-- FIRST: Theft reports & analytics 
+          <div class="row">
+            <div class="col-12">
+              <h4 class="font-weight-bold mb-1">Theft Reports &amp; Analytics</h4>
+              <p class="text-muted small mb-3">Motorcycles reported stolen. Open and Investigating reports block the bike at the gate until resolved. Charts follow the date range selected above.</p>
+              <div id="theftDataNotice" class="alert" role="status" style="display:none;"></div>
+            </div>
+          </div>-->
+
+          <!-- KPI cards -->
+          <div class="row">
+            <div class="col-6 col-md-3 grid-margin stretch-card">
+              <div class="card"><div class="card-body py-3">
+                <small class="text-muted d-block">Open</small>
+                <h3 class="mb-0 text-danger" id="theftOpen">0</h3>
+              </div></div>
+            </div>
+            <div class="col-6 col-md-3 grid-margin stretch-card">
+              <div class="card"><div class="card-body py-3">
+                <small class="text-muted d-block">Investigating</small>
+                <h3 class="mb-0 text-warning" id="theftInvestigating">0</h3>
+              </div></div>
+            </div>
+            <div class="col-6 col-md-3 grid-margin stretch-card">
+              <div class="card"><div class="card-body py-3">
+                <small class="text-muted d-block">Reported (in range)</small>
+                <h3 class="mb-0" id="theftTotal">0</h3>
+              </div></div>
+            </div>
+            <div class="col-6 col-md-3 grid-margin stretch-card">
+              <div class="card"><div class="card-body py-3">
+                <small class="text-muted d-block">Recovered (in range)</small>
+                <h3 class="mb-0 text-success" id="theftRecovered">0</h3>
+              </div></div>
+            </div>
+            <div class="col-6 col-md-3 grid-margin stretch-card">
+              <div class="card"><div class="card-body py-3">
+                <small class="text-muted d-block">Recovery rate</small>
+                <h3 class="mb-0" id="theftKpiRate">—</h3>
+                <small class="text-muted">Recovered of closed cases (excludes false alarms)</small>
+              </div></div>
+            </div>
+            <div class="col-6 col-md-3 grid-margin stretch-card">
+              <div class="card"><div class="card-body py-3">
+                <small class="text-muted d-block">Avg. time to recover</small>
+                <h3 class="mb-0" id="theftKpiAvg">—</h3>
+                <small class="text-muted">From report to Recovered</small>
+              </div></div>
+            </div>
+            <div class="col-6 col-md-3 grid-margin stretch-card">
+              <div class="card"><div class="card-body py-3">
+                <small class="text-muted d-block">Logged inside when reported</small>
+                <h3 class="mb-0" id="theftKpiInside">0</h3>
+                <small class="text-muted">No exit was recorded, so it may have left unscanned</small>
+              </div></div>
+            </div>
+            <div class="col-6 col-md-3 grid-margin stretch-card">
+              <div class="card"><div class="card-body py-3">
+                <small class="text-muted d-block">Stolen-bike scans</small>
+                <h3 class="mb-0" id="theftKpiScans">0</h3>
+                <small class="text-muted">Times a reported bike was scanned at a gate</small>
+              </div></div>
+            </div>
+          </div>
+
+          <!-- Charts: trend + status -->
+          <div class="row">
+            <div class="col-lg-7 grid-margin stretch-card">
+              <div class="card">
+                <div class="card-body">
+                  <h4 class="card-title">Theft Reports Over Time</h4>
+                  <p class="text-muted small mb-3">Reports filed per day. Clusters may point to a specific period or area.</p>
+                  <canvas id="theftTrendChart"></canvas>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-5 grid-margin stretch-card">
+              <div class="card">
+                <div class="card-body">
+                  <h4 class="card-title">Case Status</h4>
+                  <p class="text-muted small mb-3">Where each report in the range currently stands.</p>
+                  <canvas id="theftStatusChart"></canvas>
+                  <div class="d-flex flex-wrap justify-content-around mt-3" id="theftStatusLegend"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Charts: locations + time of day -->
+          <div class="row">
+            <div class="col-lg-6 grid-margin stretch-card">
+              <div class="card">
+                <div class="card-body">
+                  <h4 class="card-title">Top Last-Seen Locations</h4>
+                  <p class="text-muted small mb-3">Where stolen bikes were last seen (top 5). Locations are grouped by the exact text entered, ignoring capitalization.</p>
+                  <canvas id="theftLocationsChart"></canvas>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-6 grid-margin stretch-card">
+              <div class="card">
+                <div class="card-body">
+                  <h4 class="card-title">Time of Day Last Seen</h4>
+                  <p class="text-muted small mb-3">Hour the bike was last seen. Useful for deciding when to add patrols.</p>
+                  <canvas id="theftHoursChart"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Theft reports table -->
+          <div class="row">
+            <div class="col-12 grid-margin stretch-card">
+              <div class="card">
+                <div class="card-body">
+                  <h4 class="card-title">Theft Report Cases</h4>
+                  <p class="text-muted small mb-3">Change a case's status here. Setting Recovered or Cancelled restores the bike. Still-active cases from before the range are always listed.</p>
+                  <div class="table-responsive">
+                    <table class="table table-hover">
+                      <thead>
+                        <tr>
+                          <th>Reported</th>
+                          <th>Owner</th>
+                          <th>Plate</th>
+                          <th>Vehicle</th>
+                          <th>Last Seen</th>
+                          <th>Location</th>
+                          <th>Police #</th>
+                          <th>Status</th>
+                        </tr>
+                      </thead>
+                      <tbody id="theftBody">
+                        <tr><td colspan="8" class="text-center text-muted">Loading…</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- Row 1: Entries/Exits trend + Vehicles inside (area) -->
           <div class="row">
             <div class="col-lg-7 grid-margin stretch-card">
@@ -183,7 +324,7 @@
               <div class="card">
                 <div class="card-body">
                   <h4 class="card-title">Registration Status Breakdown</h4>
-                  <p class="text-muted small mb-3">Share of registered motorcycles by current status.</p>
+                  <p class="text-muted small mb-3">Share of registered motorcycles by current status. Stolen motorcycles are counted as flagged.</p>
                   <canvas id="registrationStatusChart"></canvas>
                   <div class="d-flex justify-content-around mt-3">
                     <div class="text-center">
@@ -213,14 +354,14 @@
               <div class="card">
                 <div class="card-body">
                   <h4 class="card-title">Unverified / Denied Scan Attempts</h4>
-                  <p class="text-muted small mb-3">QR scans that failed verification — recurring spikes may signal lost cards, tampering, or unregistered vehicles attempting entry.</p>
+                  <p class="text-muted small mb-3">QR scans that failed verification — recurring spikes may signal lost cards, tampering, unregistered vehicles, or scans of motorcycles reported stolen.</p>
                   <canvas id="deniedScansChart" height="80"></canvas>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Row 4: Detailed records (owner / brand / model) -->
+          <!-- Last: Detailed records (owner / brand / model) -->
           <div class="row">
             <div class="col-12 grid-margin stretch-card">
               <div class="card">
@@ -288,6 +429,7 @@
       const gridColor = 'rgba(0,0,0,0.05)';
 
       let entriesExitsChart, vehiclesInsideChart, peakHoursChart, registrationStatusChart, deniedScansChart;
+      let theftTrendChart, theftStatusChart, theftLocationsChart, theftHoursChart;
       let chartsInitialized = false;
 
       // Keep the most recently loaded report payload + the range it covers,
@@ -320,7 +462,277 @@
         });
       }
 
+      // ---- Theft reports ----
+
+      function fmtDateTime(iso) {
+        return iso ? new Date(iso).toLocaleString() : '—';
+      }
+
+      async function updateTheftStatus(id, status, selectEl, previousStatus) {
+        // Ask for an optional note when closing out a case.
+        let note;
+        if (status === 'Closed' || status === 'Cancelled' || status === 'Recovered') {
+          note = prompt('Add a note (optional). Press Cancel to abort this change:');
+          if (note === null) {                 // admin aborted
+            selectEl.value = previousStatus;
+            return;
+          }
+        }
+
+        selectEl.disabled = true;
+        try {
+          const body = { status };
+          if (note !== undefined) body.note = note;
+          const res = await fetch(`/api/admin/theft-reports/${encodeURIComponent(id)}/status`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
+          loadReports(document.getElementById('reportRangeSelect').value);
+        } catch (err) {
+          selectEl.value = previousStatus;
+          selectEl.disabled = false;
+          alert('Could not update report: ' + err.message);
+        }
+      }
+
+      function renderTheft(theft) {
+        theft = theft || { open: 0, investigating: 0, recovered_in_range: 0, reports: [] };
+        document.getElementById('theftOpen').textContent = theft.open;
+        document.getElementById('theftInvestigating').textContent = theft.investigating;
+        document.getElementById('theftRecovered').textContent = theft.recovered_in_range;
+        renderTheftKpis(theft);
+
+        const body = document.getElementById('theftBody');
+        body.innerHTML = '';
+        if (!theft.reports || !theft.reports.length) {
+          body.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No theft reports in this range.</td></tr>';
+          return;
+        }
+        theft.reports.forEach(r => {
+          const tr = document.createElement('tr');
+          [
+            fmtDateTime(r.reported_at),
+            r.owner,
+            r.plate,
+            `${r.brand || ''} ${r.model || ''}`.trim(),
+            fmtDateTime(r.last_seen_at),
+            r.last_seen_location,
+            r.police_report_no
+          ].forEach(val => {
+            const td = document.createElement('td');
+            td.textContent = val || '—';
+            tr.appendChild(td);
+          });
+
+          const td = document.createElement('td');
+          const sel = document.createElement('select');
+          sel.className = 'form-control form-control-sm';
+          ['Open', 'Investigating', 'Recovered', 'Cancelled', 'Closed'].forEach(s => {
+            const o = document.createElement('option');
+            o.value = o.textContent = s;
+            if (s === r.status) o.selected = true;
+            sel.appendChild(o);
+          });
+          const originalStatus = r.status;
+          sel.addEventListener('change', () => updateTheftStatus(r.id, sel.value, sel, originalStatus));
+          td.appendChild(sel);
+          tr.appendChild(td);
+          body.appendChild(tr);
+        });
+      }
+
+      // ---- Theft analytics ----
+
+      const THEFT_STATUSES = ['Open', 'Investigating', 'Recovered', 'Cancelled', 'Closed'];
+      const theftStatusColors = {
+        Open: chartRed,
+        Investigating: chartAmber,
+        Recovered: chartGreen,
+        Cancelled: '#a0aec0',
+        Closed: '#4a5568'
+      };
+
+      function theftA(data) {
+        return (data.theft && data.theft.analytics) || {};
+      }
+
+      function theftStatusValues(a) {
+        const sc = a.status_counts || {};
+        return THEFT_STATUSES.map(s => sc[s] || 0);
+      }
+
+      function renderTheftStatusLegend(a) {
+        const vals = theftStatusValues(a);
+        const box = document.getElementById('theftStatusLegend');
+        box.innerHTML = '';
+        THEFT_STATUSES.forEach((s, i) => {
+          const item = document.createElement('div');
+          item.className = 'text-center mb-2 px-2';
+          const dot = document.createElement('span');
+          dot.className = 'mdi mdi-circle';
+          dot.style.color = theftStatusColors[s];
+          const label = document.createElement('small');
+          label.className = 'd-block text-muted';
+          label.textContent = s;
+          const num = document.createElement('strong');
+          num.textContent = vals[i];
+          item.appendChild(dot);
+          item.appendChild(label);
+          item.appendChild(num);
+          box.appendChild(item);
+        });
+      }
+
+      function fmtDuration(hours) {
+        if (hours === null || hours === undefined) return '—';
+        if (hours < 1) return Math.max(1, Math.round(hours * 60)) + ' min';
+        if (hours < 48) return (Math.round(hours * 10) / 10) + ' hrs';
+        return (Math.round(hours / 24 * 10) / 10) + ' days';
+      }
+
+      function renderTheftKpis(theft) {
+        const a = theft.analytics || {};
+        document.getElementById('theftTotal').textContent = theft.total_in_range || 0;
+        document.getElementById('theftKpiRate').textContent =
+          (a.recovery_rate === null || a.recovery_rate === undefined) ? '—' : a.recovery_rate + '%';
+        document.getElementById('theftKpiAvg').textContent = fmtDuration(a.avg_recovery_hours);
+        document.getElementById('theftKpiInside').textContent = a.inside_campus_count || 0;
+        document.getElementById('theftKpiScans').textContent = a.stolen_scans || 0;
+        renderTheftStatusLegend(a);
+        updateTheftNotice(theft);
+      }
+
+      // Explains an empty chart instead of leaving it silently blank.
+      function updateTheftNotice(theft) {
+        const box = document.getElementById('theftDataNotice');
+        if (!theft.analytics) {
+          box.className = 'alert alert-warning';
+          box.textContent = 'The server did not send theft analytics. It is probably still running an older app.py. Replace app.py with the updated file, fully stop and restart Flask, then hard-refresh this page (Ctrl+Shift+R).';
+          box.style.display = 'block';
+        } else if (!theft.total_in_range) {
+          box.className = 'alert alert-info';
+          box.textContent = 'No theft reports were filed in this date range, so the charts are empty. Try a longer range, or file a report from a student account to see data here.';
+          box.style.display = 'block';
+        } else {
+          box.style.display = 'none';
+        }
+      }
+
+      function locationData(a) {
+        const locs = a.top_locations || [];
+        return { labels: locs.map(l => l.location), values: locs.map(l => l.count) };
+      }
+
+      function initTheftCharts(data) {
+        const a = theftA(data);
+        const loc = locationData(a);
+
+        theftTrendChart = new Chart(document.getElementById('theftTrendChart'), {
+          type: 'bar',
+          data: {
+            labels: data.day_labels,
+            datasets: [{
+              label: 'Theft Reports',
+              data: a.reports_by_day || [],
+              backgroundColor: chartRed,
+              borderRadius: 4,
+              maxBarThickness: 36
+            }]
+          },
+          options: {
+            plugins: { legend: { display: false } },
+            scales: {
+              y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: gridColor } },
+              x: { grid: { display: false } }
+            }
+          }
+        });
+
+        theftStatusChart = new Chart(document.getElementById('theftStatusChart'), {
+          type: 'doughnut',
+          data: {
+            labels: THEFT_STATUSES,
+            datasets: [{
+              data: theftStatusValues(a),
+              backgroundColor: THEFT_STATUSES.map(s => theftStatusColors[s]),
+              borderWidth: 0
+            }]
+          },
+          options: {
+            cutout: '70%',
+            plugins: { legend: { display: false } }
+          }
+        });
+
+        theftLocationsChart = new Chart(document.getElementById('theftLocationsChart'), {
+          type: 'bar',
+          data: {
+            labels: loc.labels,
+            datasets: [{
+              label: 'Reports',
+              data: loc.values,
+              backgroundColor: chartBlue,
+              borderRadius: 4,
+              maxBarThickness: 28
+            }]
+          },
+          options: {
+            indexAxis: 'y',
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: gridColor } },
+              y: { grid: { display: false } }
+            }
+          }
+        });
+
+        theftHoursChart = new Chart(document.getElementById('theftHoursChart'), {
+          type: 'bar',
+          data: {
+            labels: data.hour_labels,
+            datasets: [{
+              label: 'Bikes last seen',
+              data: a.hour_counts || [],
+              backgroundColor: chartAmber,
+              borderRadius: 4,
+              maxBarThickness: 28
+            }]
+          },
+          options: {
+            plugins: { legend: { display: false } },
+            scales: {
+              y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: gridColor } },
+              x: { grid: { display: false } }
+            }
+          }
+        });
+      }
+
+      function updateTheftCharts(data) {
+        const a = theftA(data);
+        const loc = locationData(a);
+
+        theftTrendChart.data.labels = data.day_labels;
+        theftTrendChart.data.datasets[0].data = a.reports_by_day || [];
+        theftTrendChart.update();
+
+        theftStatusChart.data.datasets[0].data = theftStatusValues(a);
+        theftStatusChart.update();
+
+        theftLocationsChart.data.labels = loc.labels;
+        theftLocationsChart.data.datasets[0].data = loc.values;
+        theftLocationsChart.update();
+
+        theftHoursChart.data.labels = data.hour_labels;
+        theftHoursChart.data.datasets[0].data = a.hour_counts || [];
+        theftHoursChart.update();
+      }
+
       function initCharts(data) {
+        initTheftCharts(data);
         entriesExitsChart = new Chart(document.getElementById('entriesExitsChart'), {
           type: 'line',
           data: {
@@ -438,6 +850,7 @@
       }
 
       function updateCharts(data) {
+        updateTheftCharts(data);
         entriesExitsChart.data.labels = data.day_labels;
         entriesExitsChart.data.datasets[0].data = data.daily_entries;
         entriesExitsChart.data.datasets[1].data = data.daily_exits;
@@ -527,6 +940,49 @@
         });
         sections.push(rowsToCsv([['Unverified / Denied Scan Attempts'], ...deniedRows]));
 
+        const ta = (data.theft && data.theft.analytics) || {};
+        const tsc = ta.status_counts || {};
+        const theftSummaryRows = [
+          ['Theft Analytics'],
+          ['Open', data.theft ? data.theft.open : ''],
+          ['Investigating', data.theft ? data.theft.investigating : ''],
+          ['Reported in range', data.theft ? data.theft.total_in_range : ''],
+          ['Recovered in range', data.theft ? data.theft.recovered_in_range : ''],
+          ['Recovery rate (%)', ta.recovery_rate === null || ta.recovery_rate === undefined ? '' : ta.recovery_rate],
+          ['Avg hours to recover', ta.avg_recovery_hours === null || ta.avg_recovery_hours === undefined ? '' : ta.avg_recovery_hours],
+          ['Logged inside when reported', ta.inside_campus_count],
+          ['Stolen-bike scans', ta.stolen_scans],
+          [],
+          ['Status', 'Count'],
+          ...THEFT_STATUSES.map(st => [st, tsc[st] || 0]),
+          [],
+          ['Top Last-Seen Location', 'Reports'],
+          ...(ta.top_locations || []).map(l => [l.location, l.count]),
+          [],
+          ['Date', 'Theft Reports'],
+          ...(data.day_labels || []).map((label, i) => [label, (ta.reports_by_day || [])[i]]),
+          [],
+          ['Hour Last Seen', 'Bikes'],
+          ...(data.hour_labels || []).map((label, i) => [label, (ta.hour_counts || [])[i]])
+        ];
+        sections.push(rowsToCsv(theftSummaryRows));
+
+        const theftRows = [['Reported', 'Owner', 'Plate', 'Vehicle', 'Last Seen', 'Location', 'Police Report #', 'Status', 'Admin Note']];
+        ((data.theft && data.theft.reports) || []).forEach(r => {
+          theftRows.push([
+            r.reported_at,
+            r.owner,
+            r.plate,
+            `${r.brand || ''} ${r.model || ''}`.trim(),
+            r.last_seen_at,
+            r.last_seen_location,
+            r.police_report_no,
+            r.status,
+            r.admin_note
+          ]);
+        });
+        sections.push(rowsToCsv([['Theft Reports'], ...theftRows]));
+
         const recordRows = [['Date', 'Owner', 'Plate', 'Brand', 'Model', 'Time In', 'Time Out']];
         (data.records || []).forEach(r => {
           recordRows.push([r.date, r.owner, r.plate, r.brand, r.model, r.time_in, r.time_out]);
@@ -584,6 +1040,7 @@
           }
           updateStatusBoxes(data.registration_status);
           renderRecords(data.records);
+          renderTheft(data.theft);
 
           latestReportData = data;
           latestReportDays = days;
@@ -591,6 +1048,10 @@
         } catch (err) {
           console.error('Failed to load /api/reports/summary:', err);
           exportBtn.disabled = true;
+          const box = document.getElementById('theftDataNotice');
+          box.className = 'alert alert-danger';
+          box.textContent = 'Could not load report data: ' + err.message + '. Check that Flask is running and look at the browser console (F12) and the Flask terminal for the error.';
+          box.style.display = 'block';
         }
       }
 
