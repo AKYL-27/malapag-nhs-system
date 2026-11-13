@@ -4,7 +4,8 @@ Campus Vehicle Management System - Flask backend
 Serves the existing static HTML pages (dashboard, user-management,
 motorcycle-management, qrcode-management, entry-exit-records, reports,
 register, login) and exposes a REST API for motorcycles, student/staff
-registration, and security guard registration, backed by MongoDB.
+registration, security guard registration, and theft reports, backed by
+MongoDB.
 
 Expected project layout (relative to this file):
 
@@ -83,12 +84,22 @@ REQUIRED_FIELDS = ["owner", "plate", "brand", "model"]
 # Approved / Declined are set from the motorcycle-management page's
 # per-row Approve/Decline buttons (a moderation decision on the vehicle
 # itself), distinct from a user/guard *account's* approval_status.
-ALLOWED_STATUSES = {"Registered", "Pending", "Flagged", "Approved", "Declined"}
+# Stolen is set automatically when the owner files a theft report and is
+# cleared only by an admin resolving that report.
+ALLOWED_STATUSES = {"Registered", "Pending", "Flagged", "Approved", "Declined", "Stolen"}
 
 # QR pass status is tracked separately from the vehicle's gate-eligibility
 # `status` above — this is purely about whether a QR pass has been issued
 # for the vehicle (see the QR Code Management page).
 ALLOWED_QR_STATUSES = {"Active", "None", "Expired"}
+
+# Theft report workflow.
+#   Open / Investigating  -> the motorcycle is blocked at the gate (status "Stolen")
+#   Recovered / Cancelled -> the motorcycle is put back to its previous status
+#   Closed                -> case closed without recovery; the bike stays "Stolen"
+ALLOWED_THEFT_STATUSES = {"Open", "Investigating", "Recovered", "Cancelled", "Closed"}
+ACTIVE_THEFT_STATUSES = ["Open", "Investigating"]
+RESTORE_ON = {"Recovered", "Cancelled"}
 
 # Name is split into firstName / middleName (optional) / lastName. The full
 # name is built server-side from those parts and stored as `fullName` so the
@@ -124,6 +135,8 @@ denied_scans = db["denied_scans"]
 # Admin accounts for the admin dashboard (index.html and pages/*). Kept in
 # their own collection, separate from students/staff and security guards.
 admins = db["admins"]
+# Theft reports filed by motorcycle owners.
+theft_reports = db["theft_reports"]
 
 # Enforce unique plate numbers and emails at the database level.
 motorcycles.create_index("plate", unique=True)
@@ -133,6 +146,8 @@ security_guards.create_index("idNumber", unique=True)
 entry_exit_logs.create_index([("owner_id", 1), ("entry_time", -1)])
 denied_scans.create_index("time")
 admins.create_index("username", unique=True)
+theft_reports.create_index([("status", 1), ("reported_at", -1)])
+theft_reports.create_index("motorcycle_id")
 
 
 def seed_default_admin():
@@ -196,15 +211,18 @@ def validate_payload(data, partial=False):
 
 
 def clean_motorcycle_fields(data):
-    """Pick out only the fields we care about and normalize them."""
+    """Pick out only the fields we care about and normalize them.
+
+    NOTE: this no longer defaults `status`. Defaulting here meant every edit
+    (which sends no status) silently reset the bike to "Registered". The
+    default is now applied only when a motorcycle is created.
+    """
     fields = {}
     for key in ["owner", "brand", "model", "color", "year", "orcr", "status", "qr_status"]:
         if key in data:
             fields[key] = str(data[key]).strip()
     if "plate" in data:
         fields["plate"] = str(data["plate"]).strip().upper()
-    if "status" not in fields:
-        fields.setdefault("status", "Registered")
     return fields
 
 
@@ -275,6 +293,30 @@ def _to_local(dt):
     if dt.tzinfo is None:
         dt = dt.replace(tzinfo=timezone.utc)
     return dt.astimezone(LOCAL_TZ)
+
+
+def _parse_local_datetime(value):
+    """'2026-11-14T18:30' (from <input type=datetime-local>) -> naive UTC.
+
+    Returns None if the value can't be parsed.
+    """
+    try:
+        dt = datetime.fromisoformat(str(value))
+    except ValueError:
+        return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=LOCAL_TZ)
+    return dt.astimezone(timezone.utc).replace(tzinfo=None)
+
+
+def serialize_theft(doc):
+    """Convert a theft report into a JSON-friendly dict with local timestamps."""
+    doc = dict(doc)
+    doc["id"] = str(doc.pop("_id"))
+    for key in ("last_seen_at", "reported_at", "resolved_at"):
+        doc[key] = _to_local(doc[key]).isoformat() if doc.get(key) else None
+    doc.pop("updated_at", None)
+    return doc
 
 
 def serialize_log(doc):
@@ -445,6 +487,9 @@ def create_motorcycle():
         return jsonify({"error": error}), 400
 
     fields = clean_motorcycle_fields(data)
+    # Default applied on create only. "Pending" so a bike a student adds
+    # themselves still needs approval. Use "Registered" for the old behavior.
+    fields.setdefault("status", "Pending")
     fields["created_at"] = datetime.now(timezone.utc)
     fields["updated_at"] = fields["created_at"]
 
@@ -469,6 +514,17 @@ def update_motorcycle(moto_id):
     error = validate_payload(data, partial=(request.method == "PATCH"))
     if error:
         return jsonify({"error": error}), 400
+
+    # A bike reported stolen can't be edited or have its status changed here;
+    # it is released only by an admin resolving the theft report.
+    existing = motorcycles.find_one({"_id": oid}, {"status": 1})
+    if existing is None:
+        return jsonify({"error": "Motorcycle not found"}), 404
+    if existing.get("status") == "Stolen":
+        return jsonify({
+            "error": "This motorcycle is reported stolen and can't be edited. "
+                     "Resolve the theft report first."
+        }), 403
 
     fields = clean_motorcycle_fields(data)
     fields["updated_at"] = datetime.now(timezone.utc)
@@ -940,6 +996,16 @@ def scan_lookup():
         })
         return jsonify({"error": "No registered motorcycle matches this QR code."}), 404
 
+    # A scan of a motorcycle reported stolen is logged so the admin can see
+    # where and when it turned up.
+    stolen = moto.get("status") == "Stolen"
+    if stolen:
+        denied_scans.insert_one({
+            "plate": moto["plate"],
+            "reason": "reported_stolen",
+            "time": datetime.now(timezone.utc),
+        })
+
     owner = None
     owner_oid = to_object_id(moto.get("owner_id"))
     if owner_oid is not None:
@@ -955,6 +1021,7 @@ def scan_lookup():
             "idNumber": (owner or {}).get("idNumber", ""),
         },
         "inside": open_record is not None,
+        "stolen": stolen,
     })
 
 
@@ -965,8 +1032,9 @@ def scan_confirm():
     Body: {"motorcycle_id": "...", "action": "entry" | "exit", "guard_id": "..."}
 
     Rules:
-      - Entry is only allowed for motorcycles with status "Registered"
-        (Pending, Flagged and Declined are refused).
+      - Stolen motorcycles are refused for BOTH entry and exit.
+      - Entry is only allowed for motorcycles with status "Registered" or
+        "Approved" (Pending, Flagged and Declined are refused).
       - Entry is refused if the motorcycle is already inside.
       - Exit needs an open (still inside) record.
     """
@@ -986,6 +1054,15 @@ def scan_confirm():
 
     plate = moto["plate"]
     now = datetime.now(timezone.utc)
+
+    # Reported stolen: block entry AND exit so the guard can hold the vehicle.
+    # (scan_lookup already logged the scan, so it isn't logged again here.)
+    if moto.get("status") == "Stolen":
+        return jsonify({
+            "error": "ALERT: this motorcycle is reported STOLEN. Do not release it. "
+                     "Hold the vehicle and contact the security office.",
+            "stolen": True,
+        }), 403
 
     if action == "entry":
         if moto.get("status") not in ("Registered", "Approved"):
@@ -1183,6 +1260,153 @@ def security_monitoring_logs():
     return jsonify({"logs": logs})
 
 
+# ── API: Theft reports ───────────────────────────────────────────────────────
+@app.route("/api/theft-reports", methods=["POST"])
+def create_theft_report():
+    """File a theft report for one of the caller's motorcycles.
+
+    Body: {owner_id, motorcycle_id, last_seen_at?, last_seen_location,
+           description, police_report_no?}
+
+    Side effect: the motorcycle's status becomes "Stolen", which blocks it
+    at the gate (see scan_lookup / scan_confirm).
+
+    SECURITY NOTE: owner_id comes from the request body. Add real
+    sessions/tokens before going live so a caller can't report another
+    user's motorcycle.
+    """
+    data = request.get_json(silent=True) or {}
+    owner_id = str(data.get("owner_id", "")).strip()
+    moto_oid = to_object_id(data.get("motorcycle_id"))
+    description = str(data.get("description", "")).strip()
+    location = str(data.get("last_seen_location", "")).strip()
+
+    if not owner_id or moto_oid is None:
+        return jsonify({"error": "owner_id and motorcycle_id are required."}), 400
+    if not description or not location:
+        return jsonify({"error": "Please describe what happened and where it was last seen."}), 400
+
+    # The bike must belong to the person reporting it.
+    moto = motorcycles.find_one({"_id": moto_oid, "owner_id": owner_id})
+    if moto is None:
+        return jsonify({"error": "Motorcycle not found for this account."}), 404
+
+    if theft_reports.find_one({"motorcycle_id": str(moto_oid),
+                               "status": {"$in": ACTIVE_THEFT_STATUSES}}):
+        return jsonify({"error": "There is already an active theft report for this motorcycle."}), 409
+
+    now = datetime.now(timezone.utc)
+    last_seen = _parse_local_datetime(data.get("last_seen_at")) if data.get("last_seen_at") else None
+    was_inside = entry_exit_logs.find_one({"plate": moto["plate"], "exit_time": None}) is not None
+
+    # If the bike is somehow already marked Stolen (e.g. a previously
+    # "Closed" case), remember a sensible status to restore to later.
+    previous_status = moto.get("status", "Registered")
+    if previous_status == "Stolen":
+        previous_status = "Registered"
+
+    doc = {
+        "motorcycle_id": str(moto_oid),
+        "owner_id": owner_id,
+        "owner": moto.get("owner", ""),
+        "plate": moto["plate"],
+        "brand": moto.get("brand", ""),
+        "model": moto.get("model", ""),
+        "description": description[:1000],
+        "last_seen_location": location[:200],
+        "last_seen_at": last_seen,
+        "police_report_no": str(data.get("police_report_no", "")).strip()[:50],
+        "was_inside_campus": was_inside,
+        "previous_status": previous_status,
+        "status": "Open",
+        "admin_note": "",
+        "reported_at": now,
+        "resolved_at": None,
+    }
+    result = theft_reports.insert_one(doc)
+
+    # Immediately block the bike at the gate.
+    motorcycles.update_one(
+        {"_id": moto_oid},
+        {"$set": {"status": "Stolen", "updated_at": now}},
+    )
+    return jsonify(serialize_theft(theft_reports.find_one({"_id": result.inserted_id}))), 201
+
+
+@app.route("/api/theft-reports", methods=["GET"])
+def list_theft_reports():
+    """List theft reports. Optional filters: owner_id, status."""
+    query = {}
+    owner_id = request.args.get("owner_id", "").strip()
+    status = request.args.get("status", "").strip()
+    if owner_id:
+        query["owner_id"] = owner_id
+    if status in ALLOWED_THEFT_STATUSES:
+        query["status"] = status
+    docs = theft_reports.find(query).sort("reported_at", -1).limit(500)
+    return jsonify([serialize_theft(d) for d in docs])
+
+
+@app.route("/api/admin/theft-reports/<report_id>/status", methods=["PATCH"])
+def admin_update_theft_report(report_id):
+    """Move a theft report through its workflow (admin).
+
+    Body: {"status": "Open"|"Investigating"|"Recovered"|"Cancelled"|"Closed",
+           "note": "optional admin note"}
+
+    Recovered / Cancelled put the motorcycle back to its previous status.
+    Open / Investigating (including re-opening a resolved case) block it again.
+
+    SECURITY NOTE: add admin authentication before going live.
+    """
+    oid = to_object_id(report_id)
+    if oid is None:
+        return jsonify({"error": "Invalid report id."}), 400
+
+    data = request.get_json(silent=True) or {}
+    status = data.get("status")
+    if status not in ALLOWED_THEFT_STATUSES:
+        return jsonify({"error": f"Status must be one of: {', '.join(sorted(ALLOWED_THEFT_STATUSES))}"}), 400
+
+    now = datetime.now(timezone.utc)
+    updates = {"status": status, "updated_at": now}
+    if "note" in data:
+        updates["admin_note"] = str(data["note"]).strip()[:1000]
+    if status in ACTIVE_THEFT_STATUSES:
+        updates["resolved_at"] = None
+    else:
+        updates["resolved_at"] = now
+
+    report = theft_reports.find_one_and_update(
+        {"_id": oid}, {"$set": updates}, return_document=ReturnDocument.AFTER
+    )
+    if report is None:
+        return jsonify({"error": "Report not found."}), 404
+
+    moto_oid = to_object_id(report["motorcycle_id"])
+    if moto_oid is not None:
+        if status in RESTORE_ON:
+            # Recovered / false alarm: put the bike back to what it was before,
+            # unless another active report still covers it.
+            still_active = theft_reports.find_one({
+                "motorcycle_id": report["motorcycle_id"],
+                "status": {"$in": ACTIVE_THEFT_STATUSES},
+            })
+            if not still_active:
+                motorcycles.update_one(
+                    {"_id": moto_oid, "status": "Stolen"},
+                    {"$set": {"status": report.get("previous_status", "Registered"),
+                              "updated_at": now}},
+                )
+        elif status in ACTIVE_THEFT_STATUSES:
+            # Re-opened case: make sure the bike is blocked again.
+            motorcycles.update_one(
+                {"_id": moto_oid, "status": {"$ne": "Stolen"}},
+                {"$set": {"status": "Stolen", "updated_at": now}},
+            )
+    return jsonify(serialize_theft(report))
+
+
 # ── API: Reports & Analytics ──────────────────────────────────────────────────
 @app.route("/api/reports/summary", methods=["GET"])
 def reports_summary():
@@ -1195,9 +1419,10 @@ def reports_summary():
     Returns daily entries/exits/denied-scan counts over the range, a
     24-hour scan-volume histogram over the range, an hour-by-hour "vehicles
     inside campus" snapshot for *today* (always today, regardless of
-    'days'), a registration-status breakdown across all motorcycles, and a
+    'days'), a registration-status breakdown across all motorcycles, a
     detailed 'records' list (date / owner / plate / brand / model / time in /
-    time out) for the latest 1,000 entries in the range.
+    time out) for the latest 1,000 entries in the range, and a 'theft'
+    block with theft-report counts and rows.
     """
     try:
         days = max(1, min(365, int(request.args.get("days", 30))))
@@ -1267,7 +1492,8 @@ def reports_summary():
 
     active = motorcycles.count_documents({"status": {"$in": ["Registered", "Approved"]}})
     pending = motorcycles.count_documents({"status": "Pending"})
-    flagged = motorcycles.count_documents({"status": {"$in": ["Flagged", "Declined"]}})
+    # Stolen bikes are counted as flagged so they don't drop out of the chart.
+    flagged = motorcycles.count_documents({"status": {"$in": ["Flagged", "Declined", "Stolen"]}})
 
     # ── Detailed records: owner / brand / model per entry in range ──────────
     log_docs = list(
@@ -1306,6 +1532,94 @@ def reports_summary():
             "time_out": exit_local.strftime("%I:%M %p").lstrip("0") if exit_local else "—",
         })
 
+    # ── Theft reports ───────────────────────────────────────────────────────
+    # Reports filed in the range, plus any still-active report from before
+    # it, so an open case never disappears just because the filter is short.
+    theft_docs = list(
+        theft_reports.find({
+            "$or": [
+                {"reported_at": {"$gte": range_start_utc}},
+                {"status": {"$in": ACTIVE_THEFT_STATUSES}},
+            ]
+        }).sort("reported_at", -1).limit(200)
+    )
+    # Only reports filed inside the selected range feed the analytics, so
+    # the charts match the range filter (the table above also lists older
+    # still-active cases).
+    in_range = [
+        d for d in theft_docs
+        if d.get("reported_at") and d["reported_at"] >= range_start_utc
+    ]
+
+    reports_by_day = {k: 0 for k in day_keys}
+    theft_hour_counts = [0] * 24          # by hour the bike was last seen
+    status_counts = {s: 0 for s in ("Open", "Investigating", "Recovered", "Cancelled", "Closed")}
+    location_counts = {}                  # normalized -> [display label, count]
+    inside_campus_count = 0
+    recovery_hours = []
+
+    for d in in_range:
+        key = _to_local(d["reported_at"]).strftime("%Y-%m-%d")
+        if key in reports_by_day:
+            reports_by_day[key] += 1
+
+        seen = d.get("last_seen_at") or d["reported_at"]
+        theft_hour_counts[_to_local(seen).hour] += 1
+
+        status_counts[d.get("status", "Open")] = status_counts.get(d.get("status", "Open"), 0) + 1
+
+        label = (d.get("last_seen_location") or "Unknown").strip() or "Unknown"
+        norm = label.lower()
+        if norm not in location_counts:
+            location_counts[norm] = [label, 0]
+        location_counts[norm][1] += 1
+
+        if d.get("was_inside_campus"):
+            inside_campus_count += 1
+
+        if d.get("status") == "Recovered" and d.get("resolved_at"):
+            recovery_hours.append((d["resolved_at"] - d["reported_at"]).total_seconds() / 3600)
+
+    top_locations = [
+        {"location": label, "count": count}
+        for label, count in sorted(location_counts.values(), key=lambda x: x[1], reverse=True)[:5]
+    ]
+
+    # Recovery rate ignores Cancelled (false alarms) and still-open cases:
+    # of the cases that ended, how many ended with the bike back?
+    recovered_n = status_counts["Recovered"]
+    unrecovered_n = status_counts["Closed"]
+    recovery_rate = (
+        round(100 * recovered_n / (recovered_n + unrecovered_n), 1)
+        if (recovered_n + unrecovered_n) else None
+    )
+    avg_recovery_hours = (
+        round(sum(recovery_hours) / len(recovery_hours), 1) if recovery_hours else None
+    )
+
+    stolen_scans = denied_scans.count_documents({
+        "reason": "reported_stolen",
+        "time": {"$gte": range_start_utc},
+    })
+
+    theft = {
+        "open": theft_reports.count_documents({"status": "Open"}),
+        "investigating": theft_reports.count_documents({"status": "Investigating"}),
+        "recovered_in_range": status_counts["Recovered"],
+        "total_in_range": len(in_range),
+        "analytics": {
+            "reports_by_day": [reports_by_day[k] for k in day_keys],
+            "status_counts": status_counts,
+            "top_locations": top_locations,
+            "hour_counts": theft_hour_counts,
+            "inside_campus_count": inside_campus_count,
+            "recovery_rate": recovery_rate,
+            "avg_recovery_hours": avg_recovery_hours,
+            "stolen_scans": stolen_scans,
+        },
+        "reports": [serialize_theft(d) for d in theft_docs],
+    }
+
     return jsonify({
         "days": days,
         "day_labels": day_labels,
@@ -1318,6 +1632,7 @@ def reports_summary():
         "inside_counts": inside_counts,
         "registration_status": {"active": active, "pending": pending, "flagged": flagged},
         "records": records,
+        "theft": theft,
     })
 
 
@@ -1436,7 +1751,10 @@ def admin_set_approval(kind, user_id):
 
 @app.route("/api/admin/users/<kind>/<user_id>", methods=["DELETE"])
 def admin_delete_user(kind, user_id):
-    """Delete an account. For students/staff, their motorcycles are removed too."""
+    """Delete an account. For students/staff, their motorcycles are removed too.
+
+    Their theft reports are intentionally kept for the record.
+    """
     col = _collection_for(kind)
     oid = to_object_id(user_id)
     if col is None or oid is None:
