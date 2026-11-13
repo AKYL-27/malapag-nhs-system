@@ -47,6 +47,12 @@
     <!-- ============= HAS-MOTORCYCLE VIEW ============= -->
     <div id="motoView">
 
+      <!-- Shown only when the motorcycle is reported stolen -->
+      <div id="stolenBanner" role="alert" style="display:none;background:#fdecea;border:1px solid #f5c2c0;color:#a12622;border-radius:12px;padding:14px 16px;margin-bottom:20px;">
+        <strong><i class="ti ti-alert-triangle" aria-hidden="true"></i> This motorcycle is reported stolen.</strong>
+        Its QR code is blocked at the gate and its details can't be edited. If you recover it, contact the security office to close the report.
+      </div>
+
       <div class="moto-hero">
         <div class="moto-hero-icon"><i class="ti ti-motorbike" aria-hidden="true"></i></div>
         <div>
@@ -195,8 +201,8 @@ function setError(fieldId,isError){
 }
 
 function statusPillClass(status){
-  if(status==='Registered') return 'status-active';
-  if(status==='Flagged') return 'status-flagged';
+  if(status==='Registered' || status==='Approved') return 'status-active';
+  if(status==='Flagged' || status==='Stolen' || status==='Declined') return 'status-flagged';
   return 'status-pending';
 }
 
@@ -204,6 +210,7 @@ function renderView(){
   if(!currentMoto){
     document.getElementById('motoView').style.display='none';
     document.getElementById('motoEmptyState').style.display='block';
+    document.getElementById('stolenBanner').style.display='none';
     return;
   }
 
@@ -216,8 +223,12 @@ function renderView(){
 
   const status = m.status || 'Pending';
   const pillClass = statusPillClass(status);
+  const isStolen = status === 'Stolen';
   document.getElementById('heroStatusPill').className = 'status-pill '+pillClass;
-  document.getElementById('heroStatusPill').innerHTML = `<i class="ti ti-circle-check" style="font-size:12px;" aria-hidden="true"></i> ${status==='Registered'?'Registration Active':status}`;
+  document.getElementById('heroStatusPill').innerHTML =
+    `<i class="ti ti-circle-check" style="font-size:12px;" aria-hidden="true"></i> ${(status==='Registered'||status==='Approved')?'Registration Active':status}`;
+  document.getElementById('stolenBanner').style.display = isStolen ? 'block' : 'none';
+  document.getElementById('editBtn').style.display = isStolen ? 'none' : '';
 
   document.getElementById('viewOwner').textContent = m.owner || currentUser.fullName || '—';
   document.getElementById('viewPlate').textContent = m.plate || '—';
@@ -230,6 +241,7 @@ function renderView(){
 
 function enterEditMode(){
   const m=currentMoto;
+  if(m && m.status==='Stolen'){ showToast('A stolen motorcycle can\'t be edited.'); return; }
   document.getElementById('editOwnerDisplay').textContent = m.owner || currentUser.fullName || '—';
   document.getElementById('editPlate').value = m.plate || '';
   document.getElementById('editBrand').value = m.brand || '';
